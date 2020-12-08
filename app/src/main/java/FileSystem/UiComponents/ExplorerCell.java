@@ -9,7 +9,6 @@ public class ExplorerCell extends ListCell<String> {
     public void updateItem(String item, boolean empty) {
         super.updateItem(item, empty);
         MDL2IconFont iconFont1 = new MDL2IconFont("\uE8A5");
-        iconFont1.setSize(30);
         Label label = new Label("");
         HBox row = new HBox(10);
         row.getChildren().add(iconFont1);
