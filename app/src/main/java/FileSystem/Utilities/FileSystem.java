@@ -3,21 +3,23 @@ package FileSystem.Utilities;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Data{
+public class FileSystem{
     private HashMap<String, Fichero> data;
-    private static Data instance;
+    private static FileSystem instance;
     private Directorio actualDirectory;
     private String actualPath;
 
-    public static Data getInstance() { //CREATE
+    public static FileSystem getInstance() { //CREATE
         if (instance==null) {
-            instance = new Data();
+            instance = new FileSystem();
         }
         return instance;
     }
 
-    private Data() {
+    private FileSystem() {
         data = new HashMap<>();
+        data.put("root", new Directorio());
+        actualPath="root/";
     }
 
     public HashMap<String, Fichero> find(String fichero){
@@ -53,7 +55,7 @@ public class Data{
     }
 
     //change dir
-    public Fichero ChangeDirUp() {
+    public Directorio ChangeDirUp() {
         String delims = "[/]";
         String[] dirs = actualPath.split(delims);
 
@@ -70,7 +72,7 @@ public class Data{
         return actualDirectory;
     }
 
-    public Fichero ChangeDirDown(String directory) {
+    public Directorio ChangeDirDown(String directory) {
         Directorio temp = (Directorio) actualDirectory;
         actualDirectory = (Directorio) temp.getData(directory);
         return actualDirectory;
