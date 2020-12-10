@@ -1,7 +1,12 @@
 package FileSystem.Utilities;
 
+import java.security.Timestamp;
+
 public class Archivo extends Fichero {
-    //Nombre,extension, fecha de creacion, fecha de modificacion, tamaño, 
+    String extension;
+    Timestamp fechaCreacion;
+    Timestamp fechaModificacion;
+    int tamaño;
     String text;
     //lista(punteros)
 }

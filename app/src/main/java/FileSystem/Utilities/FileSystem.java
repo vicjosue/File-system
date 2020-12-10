@@ -85,4 +85,8 @@ public class FileSystem{
     public void exists(String name){
         actualDirectory.contains(name);
     }
+
+    public void remove(String name){
+        actualDirectory.delete(name);
+    }
 }

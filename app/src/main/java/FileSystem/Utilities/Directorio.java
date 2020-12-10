@@ -25,5 +25,9 @@ public class Directorio extends Fichero {
     public void add(String name, Fichero fichero) {
         hashMap.put(name,fichero);
 	}
+
+	public void delete(String name) {
+        hashMap.remove(name);
+	}
     
 }
