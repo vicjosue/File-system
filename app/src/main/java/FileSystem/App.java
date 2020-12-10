@@ -14,7 +14,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
-import jfxtras.styles.jmetro.JMetroStyleClass;
 import FileSystem.UiComponents.ExplorerCell;
 import javafx.scene.control.ListCell;
 import javafx.util.Callback;
