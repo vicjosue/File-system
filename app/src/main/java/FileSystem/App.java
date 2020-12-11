@@ -7,16 +7,24 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ToolBar;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
+import jfxtras.styles.jmetro.FlatDialog;
 import jfxtras.styles.jmetro.FlatTextInputDialog;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
@@ -28,6 +36,7 @@ import FileSystem.Utilities.Archivo;
 import FileSystem.Utilities.Directorio;
 import FileSystem.Utilities.Fichero;
 import FileSystem.Utilities.FileSystem;
+import FileSystem.Utilities.Triplet;
 import javafx.scene.control.ListCell;
 import javafx.util.Callback;
 
@@ -45,7 +54,18 @@ public class App extends Application {
             }
         });
         navigationTextField = new TextField();
+        navigationTextField.setOnAction(new EventHandler<ActionEvent>() {
+            @Override public void handle(ActionEvent e) {
+                navigateToDir();
+            }
+        });
+
         Button navigateGoButton = new Button("Go");
+        navigateGoButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override public void handle(ActionEvent e) {
+                navigateToDir();
+            }
+        });
 
         Button actionCopyButton = new Button("Copy");
         Button actionPasteButton = new Button("Paste");
@@ -57,6 +77,14 @@ public class App extends Application {
                 createDir(stage);
             }
         });
+
+        Button actionNewFileButton = new Button("New File");
+        actionNewFileButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override public void handle(ActionEvent e) {
+                createFile(stage);
+            }
+        });
+
         ToolBar toolBar = new ToolBar(
             navigateUpButton,
             navigationTextField,
@@ -65,7 +93,8 @@ public class App extends Application {
             actionCopyButton,
             actionPasteButton,
             new Separator(),
-            actionNewDirButton
+            actionNewDirButton,
+            actionNewFileButton
         );
        
         
@@ -135,12 +164,60 @@ public class App extends Application {
 
     }
 
+    private void createFile(Stage owner) {
+        FlatDialog<Triplet<String, String, String>> dialog = new FlatDialog<Triplet<String, String, String>>();
+        dialog.initOwner(owner);
+        dialog.setTitle("Create a new file");
+        dialog.setHeaderText("Create a new file");
+        
+        // Set the button types.
+        ButtonType createButtonType = new ButtonType("Create", ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(createButtonType, ButtonType.CANCEL);
+
+        // Create the username and password labels and fields.
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        TextField name = new TextField();
+        TextField extension = new TextField();
+        TextArea content = new TextArea();
+
+        grid.add(new Label("Name:"), 0, 0);
+        grid.add(name, 1, 0);
+        grid.add(new Label("Extension:"), 0, 1);
+        grid.add(extension, 1, 1);
+        grid.add(new Label("Content:"), 0, 2);
+        grid.add(content, 1, 2);
+
+        dialog.getDialogPane().setContent(grid);
+
+        Platform.runLater(() -> name.requestFocus());
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == createButtonType) {
+                return new Triplet<>(name.getText(), extension.getText(), content.getText());
+            }
+            return null;
+        });
+
+        Optional<Triplet<String, String, String>> result = dialog.showAndWait();
+
+        System.out.println(result);
+
+    }
+
     private void openFichero(Fichero item) {
         if (item instanceof Directorio) {
             fileSystem.ChangeDirDown(item.name);
         } else if (item instanceof Archivo) {
 
         }
+    }
+
+    private void navigateToDir() {
+        fileSystem.goToDir(navigationTextField.getText());
     }
 
     public static void main(String[] args) {
