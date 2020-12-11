@@ -5,7 +5,8 @@ import java.util.HashMap;
 public class Directorio extends Fichero {
     private HashMap<String, Fichero> hashMap;
 
-    public Directorio(){
+    public Directorio(String name){
+        super(name);
         hashMap = new HashMap<>();
     }
 

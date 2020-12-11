@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import FileSystem.UiComponents.ExplorerCell;
 import FileSystem.Utilities.Directorio;
+import FileSystem.Utilities.Fichero;
 import FileSystem.Utilities.FileSystem;
 import javafx.scene.control.ListCell;
 import javafx.util.Callback;
@@ -31,7 +32,7 @@ import javafx.util.Callback;
 public class App extends Application {
     FileSystem fileSystem = FileSystem.getInstance();
     TextField navigationTextField;
-    ObservableList<String> listItems;
+    ObservableList<Fichero> listItems;
 
     @Override
     public void start(Stage stage) {
@@ -61,17 +62,17 @@ public class App extends Application {
         );
        
         
-        ListView<String> list = new ListView<String>();
+        ListView<Fichero> list = new ListView<Fichero>();
         Directorio actualDir = fileSystem.ChangeDirUp();
         listItems = FXCollections.observableArrayList (
-            actualDir.getHashMap().keySet()
+            actualDir.getHashMap().values()
         );
         list.setItems(listItems);
 
-        list.setCellFactory(new Callback<ListView<String>, 
-            ListCell<String>>() {
+        list.setCellFactory(new Callback<ListView<Fichero>, 
+            ListCell<Fichero>>() {
                 @Override 
-                public ListCell<String> call(ListView<String> list) {
+                public ListCell<Fichero> call(ListView<Fichero> list) {
                     return new ExplorerCell();
                 }
             }
@@ -95,7 +96,7 @@ public class App extends Application {
     private void refreshView() {
         navigationTextField.setText(fileSystem.getActualPath());
         listItems.clear();
-        listItems.addAll(fileSystem.getActualDirectory().getHashMap().keySet());
+        listItems.addAll(fileSystem.getActualDirectory().getHashMap().values());
     }
 
     private void createDir(Stage owner) {
@@ -107,7 +108,7 @@ public class App extends Application {
 
         Optional<String> result = dialog.showAndWait();
         if (result.isPresent()){
-            fileSystem.addFichero(result.get(), new Directorio());
+            fileSystem.addFichero(result.get(), new Directorio(result.get()));
         }
 
     }

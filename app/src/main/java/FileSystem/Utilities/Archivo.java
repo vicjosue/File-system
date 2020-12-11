@@ -9,4 +9,8 @@ public class Archivo extends Fichero {
     int tamano;
     String text;
     //lista(punteros)
+
+    public Archivo(String name) {
+        super(name);
+    }
 }

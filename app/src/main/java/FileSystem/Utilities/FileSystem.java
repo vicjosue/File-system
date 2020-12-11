@@ -25,7 +25,7 @@ public class FileSystem {
 
     private FileSystem() {
         data = new HashMap<>();
-        data.put("root", new Directorio());
+        data.put("root", new Directorio("root"));
         actualPath = "root/";
     }
 
