@@ -48,4 +48,5 @@ gradle-app.setting
 .project
 .settings
 .classpath
+.vscode
 bin
