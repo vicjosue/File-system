@@ -5,16 +5,23 @@ package FileSystem;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ToolBar;
 import javafx.scene.control.Button;
 import javafx.scene.control.Separator;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import jfxtras.styles.jmetro.FlatTextInputDialog;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
+
+import java.util.Optional;
+
 import FileSystem.UiComponents.ExplorerCell;
 import FileSystem.Utilities.Directorio;
 import FileSystem.Utilities.FileSystem;
@@ -23,27 +30,43 @@ import javafx.util.Callback;
 
 public class App extends Application {
     FileSystem fileSystem = FileSystem.getInstance();
+    TextField navigationTextField;
+    ObservableList<String> listItems;
 
     @Override
     public void start(Stage stage) {
         Button navigateUpButton = new Button("Up");
+        navigationTextField = new TextField();
         Button navigateGoButton = new Button("Go");
+
+        Button actionCopyButton = new Button("Copy");
+        Button actionPasteButton = new Button("Paste");
+
+        Button actionNewDirButton = new Button("New Dir");
+
+        actionNewDirButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override public void handle(ActionEvent e) {
+                createDir(stage);
+            }
+        });
         ToolBar toolBar = new ToolBar(
             navigateUpButton,
+            navigationTextField,
             navigateGoButton,
             new Separator(),
-            new Button("Copy"),
-            new Button("Paste")
+            actionCopyButton,
+            actionPasteButton,
+            new Separator(),
+            actionNewDirButton
         );
        
         
         ListView<String> list = new ListView<String>();
         Directorio actualDir = fileSystem.ChangeDirUp();
-        ObservableList<String> items = FXCollections.observableArrayList (
-        //    "Single", "Double", "Suite", "Family App"
-        actualDir.getHashMap().keySet()
-            );
-        list.setItems(items);
+        listItems = FXCollections.observableArrayList (
+            actualDir.getHashMap().keySet()
+        );
+        list.setItems(listItems);
 
         list.setCellFactory(new Callback<ListView<String>, 
             ListCell<String>>() {
@@ -57,6 +80,9 @@ public class App extends Application {
         BorderPane border = new BorderPane();
         border.setTop(toolBar);
         border.setCenter(list);
+
+        refreshView();
+        fileSystem.changesCallback = fileSystem.navigateCallback = (Void) -> { refreshView(); return Void; };
         
         Scene scene = new Scene(border, 640, 480);
 
@@ -64,6 +90,26 @@ public class App extends Application {
 
         stage.setScene(scene);
         stage.show();
+    }
+
+    private void refreshView() {
+        navigationTextField.setText(fileSystem.getActualPath());
+        listItems.clear();
+        listItems.addAll(fileSystem.getActualDirectory().getHashMap().keySet());
+    }
+
+    private void createDir(Stage owner) {
+        FlatTextInputDialog dialog = new FlatTextInputDialog();
+        dialog.initOwner(owner);
+        dialog.setTitle("Create a new directory");
+        dialog.setHeaderText("Create a new directory");
+        dialog.setContentText("Enter directory name:");
+
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent()){
+            fileSystem.addFichero(result.get(), new Directorio());
+        }
+
     }
 
     public static void main(String[] args) {

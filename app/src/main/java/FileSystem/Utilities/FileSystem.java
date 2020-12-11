@@ -2,12 +2,17 @@ package FileSystem.Utilities;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
+
+import FileSystem.UiComponents.UiCallback;
 
 public class FileSystem{
     private HashMap<String, Fichero> data;
     private static FileSystem instance;
     private Directorio actualDirectory;
     private String actualPath;
+    public Function<Void, Void> navigateCallback;
+    public Function<Void, Void> changesCallback;
 
     public static FileSystem getInstance() { //CREATE
         if (instance==null) {
@@ -37,7 +42,7 @@ public class FileSystem{
         return result;//value still remains in result
     }
 
-	private void search(String fichero, String path, Directorio searchMap,HashMap<String, Fichero> result){
+	private void search(String fichero, String path, Directorio searchMap,HashMap<String, Fichero> result) {
         /*
         Iterates over all tree, if there is a coincidence then add the coincidence
         */
@@ -68,7 +73,7 @@ public class FileSystem{
             temp = (Directorio) actualDirectory;
             actualDirectory = (Directorio) temp.getData(dirs[i]);
         }
-        
+        navigateCallbackEmit();
         return actualDirectory;
     }
 
@@ -80,6 +85,7 @@ public class FileSystem{
 
     public void addFichero(String name,Fichero fichero){
         actualDirectory.add(name,fichero);
+        changesCallbackEmit();
     }
 
     public void exists(String name){
@@ -88,5 +94,25 @@ public class FileSystem{
 
     public void remove(String name){
         actualDirectory.delete(name);
+    }
+
+    public String getActualPath() {
+        return actualPath;
+    }
+
+    public Directorio getActualDirectory() {
+        return actualDirectory;
+    }
+
+    public void navigateCallbackEmit() {
+        if (navigateCallback != null) {
+            this.navigateCallback.apply(null);
+        }
+    }
+
+    public void changesCallbackEmit() {
+        if (navigateCallback != null) {
+            this.changesCallback.apply(null);
+        }
     }
 }
