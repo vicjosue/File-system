@@ -5,7 +5,12 @@ enum Type {
     ARCHIVO
 }
 
-public abstract class Fichero {
+public abstract class Fichero implements java.io.Serializable{
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+    
     Type tipo;
     public String name;
 

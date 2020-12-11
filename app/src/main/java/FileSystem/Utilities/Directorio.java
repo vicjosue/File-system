@@ -3,6 +3,10 @@ package FileSystem.Utilities;
 import java.util.HashMap;
 
 public class Directorio extends Fichero {
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
     private HashMap<String, Fichero> hashMap;
 
     public Directorio(String name){

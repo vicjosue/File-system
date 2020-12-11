@@ -1,10 +1,24 @@
 package FileSystem.Utilities;
 
-import java.io.File;
+import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+
+import com.google.common.base.Splitter;
+
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.Timestamp;
 
 public class FileSystem {
     private HashMap<String, Fichero> data;
@@ -15,6 +29,7 @@ public class FileSystem {
     private int tamano;// tamaño de cada sector
     public Function<Void, Void> navigateCallback;
     public Function<Void, Void> changesCallback;
+    ArrayList<Integer> usedSectors = new ArrayList<>();
 
     public static FileSystem getInstance() { // CREATE
         if (instance == null) {
@@ -60,17 +75,34 @@ public class FileSystem {
         }
     }
 
+    public Directorio ChangeDir(String path) {
+        String delims = "[/]";
+        String[] dirs = path.split(delims);
+
+        actualDirectory = (Directorio) data.get(dirs[0]);// root
+        actualPath = dirs[0] + "/";
+        Directorio temp;
+
+        for (int i = 1; i < dirs.length - 1; i++) {
+            actualPath += dirs[i] + "/";
+            temp = (Directorio) actualDirectory;
+            actualDirectory = (Directorio) temp.getData(dirs[i]);
+        }
+
+        return actualDirectory;
+    }
+
     // change dir
     public Directorio ChangeDirUp() {
         String delims = "[/]";
         String[] dirs = actualPath.split(delims);
 
         actualDirectory = (Directorio) data.get(dirs[0]);// root
-        actualPath = dirs[0]+"/";
+        actualPath = dirs[0] + "/";
         Directorio temp;
 
         for (int i = 1; i < dirs.length - 1; i++) {
-            actualPath += dirs[i]+"/";
+            actualPath += dirs[i] + "/";
             temp = (Directorio) actualDirectory;
             actualDirectory = (Directorio) temp.getData(dirs[i]);
         }
@@ -81,35 +113,112 @@ public class FileSystem {
     public Directorio ChangeDirDown(String directory) {
         Directorio temp = (Directorio) actualDirectory;
         actualDirectory = (Directorio) temp.getData(directory);
-        actualPath += directory+"/";
+        actualPath += directory + "/";
 
         navigateCallbackEmit();
-        
+
         return actualDirectory;
     }
 
-    public void addFichero(String name, Fichero fichero) {
+    public boolean addFichero(String name, Fichero fichero) {
         actualDirectory.add(name, fichero);
         changesCallbackEmit();
+        if (fichero.getType() == Type.ARCHIVO) {
+            try {
+                Archivo file = (Archivo) fichero;
+                //file.fechaCreacion = new Timestamp(System.currentTimeMillis());
+                addToDisk((Archivo) fichero);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        return true;
     }
+
+    private boolean addToDisk(Archivo fichero) throws IOException {
+        String serialized=toString(fichero);
+
+        List<String> lines = Files.readAllLines(Paths.get("disk.txt"), StandardCharsets.UTF_8);
+        if(lines.size()< (sectores-usedSectors.size())){
+            return false; // not enough space
+        }
+        int i=0;
+        for(final String token :
+            Splitter
+                .fixedLength(tamano/2)
+                .split(serialized)){
+                    
+            while (i<sectores) { //search for a free sector
+                i++;
+                if(!usedSectors.contains(i)){
+                    usedSectors.add(i);
+                    fichero.pointers.add(i);
+                    lines.set(i, token);
+                    break;
+                } else {
+                    return false; //this should not happen, not enough space
+                }
+                
+            }
+        }
+
+        BufferedWriter writer = new BufferedWriter(new FileWriter("disk.txt", true));
+        for(String str: lines) {
+            writer.write(str + System.lineSeparator());
+          }
+        writer.close();
+        return true;
+    }
+
+    public static List<String> splitEqually(String text, int size) {
+        // Give the list the right capacity to start with. You could use an array
+        // instead if you wanted.
+        List<String> ret = new ArrayList<String>((text.length() + size - 1) / size);
+    
+        for (int start = 0; start < text.length(); start += size) {
+            ret.add(text.substring(start, Math.min(text.length(), start + size)));
+        }
+        return ret;
+    }
+
+    private String toString( Serializable o ) throws IOException {
+        //1 character = 2 bytes
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream( baos );
+         oos.writeObject( o );
+         oos.close();
+         return Base64.getEncoder().encodeToString(baos.toByteArray()); 
+     }
+    
 
     public boolean exists(String name) {
         return actualDirectory.contains(name);
     }
 
-    public void remove(String name) {
+    public void remove(String name) throws IOException {
+        List<String> lines = Files.readAllLines(Paths.get("disk.txt"), StandardCharsets.UTF_8);
+        Archivo temp = (Archivo) actualDirectory.getHashMap().get(name);
+        ArrayList<Integer> sectoresArchivo = temp.pointers;
+        for(Integer sector: sectoresArchivo){
+            usedSectors.remove(sector);
+            lines.set(sector, "");
+        }
         actualDirectory.delete(name);
+        BufferedWriter writer = new BufferedWriter(new FileWriter("disk.txt", true));
+        for(String str: lines) {
+            writer.write(str + System.lineSeparator());
+          }
+        writer.close();
     }
 
     public void create(int sectores, int tamano) throws IOException {
         this.sectores=sectores;
         this.tamano=tamano;
         
-        File file = new File("disk.txt");
-        // Si el archivo no existe es creado
-        if (!file.exists()) {
-            file.createNewFile();
-        }
+        BufferedWriter writer = new BufferedWriter(new FileWriter("disk.txt"));
+        writer.write("");//delete old stuff
+        writer.close();
     }
 
     public String getActualPath() {
