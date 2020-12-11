@@ -7,6 +7,7 @@ enum Type {
 
 public abstract class Fichero{
     Type tipo;
+    String name;
     
     public void setType(Type tipo) {
         this.tipo = tipo; 

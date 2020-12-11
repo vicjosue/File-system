@@ -6,7 +6,7 @@ public class Archivo extends Fichero {
     String extension;
     Timestamp fechaCreacion;
     Timestamp fechaModificacion;
-    int tamaño;
+    int tamano;
     String text;
     //lista(punteros)
 }
