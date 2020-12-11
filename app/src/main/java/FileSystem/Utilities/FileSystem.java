@@ -18,7 +18,7 @@ import com.google.common.base.Splitter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.Timestamp;
+import java.sql.Timestamp;
 
 public class FileSystem {
     private HashMap<String, Fichero> data;
@@ -75,23 +75,6 @@ public class FileSystem {
         }
     }
 
-    public Directorio ChangeDir(String path) {
-        String delims = "[/]";
-        String[] dirs = path.split(delims);
-
-        actualDirectory = (Directorio) data.get(dirs[0]);// root
-        actualPath = dirs[0] + "/";
-        Directorio temp;
-
-        for (int i = 1; i < dirs.length - 1; i++) {
-            actualPath += dirs[i] + "/";
-            temp = (Directorio) actualDirectory;
-            actualDirectory = (Directorio) temp.getData(dirs[i]);
-        }
-
-        return actualDirectory;
-    }
-
     // change dir
     public Directorio goToDir(String path) {
         String delims = "[/]";
@@ -101,7 +84,7 @@ public class FileSystem {
         actualPath = dirs[0]+"/";
         Directorio temp;
     
-        for (int i = 1; i < dirs.length - 1; i++) {
+        for (int i = 1; i < dirs.length; i++) {
             actualPath += dirs[i]+"/";
             temp = (Directorio) actualDirectory;
             actualDirectory = (Directorio) temp.getData(dirs[i]);
@@ -139,25 +122,26 @@ public class FileSystem {
         return actualDirectory;
     }
 
-    public boolean addFichero(String name, Fichero fichero) {
-        actualDirectory.add(name, fichero);
-        changesCallbackEmit();
+    public boolean addFichero(String name, Fichero fichero) {        
         if (fichero.getType() == Type.ARCHIVO) {
             try {
                 Archivo file = (Archivo) fichero;
-                //file.fechaCreacion = new Timestamp(System.currentTimeMillis());
-                addToDisk((Archivo) fichero);
+                Timestamp time = new Timestamp(new java.util.Date().getTime());
+                file.fechaCreacion = time;
+                file.fechaModificacion = time;
+                String serialized = toString(fichero);
+                file.tamano = serialized.length()/2;
+                addToDisk((Archivo) fichero,serialized);
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
+        actualDirectory.add(name, fichero);
+        changesCallbackEmit();
         return true;
     }
 
-    private boolean addToDisk(Archivo fichero) throws IOException {
-        String serialized=toString(fichero);
-
+    private boolean addToDisk(Archivo fichero,String serialized) throws IOException {
         List<String> lines = Files.readAllLines(Paths.get("disk.txt"), StandardCharsets.UTF_8);
         if(lines.size()< (sectores-usedSectors.size())){
             return false; // not enough space
@@ -178,7 +162,6 @@ public class FileSystem {
                 } else {
                     return false; //this should not happen, not enough space
                 }
-                
             }
         }
 
@@ -188,17 +171,6 @@ public class FileSystem {
           }
         writer.close();
         return true;
-    }
-
-    public static List<String> splitEqually(String text, int size) {
-        // Give the list the right capacity to start with. You could use an array
-        // instead if you wanted.
-        List<String> ret = new ArrayList<String>((text.length() + size - 1) / size);
-    
-        for (int start = 0; start < text.length(); start += size) {
-            ret.add(text.substring(start, Math.min(text.length(), start + size)));
-        }
-        return ret;
     }
 
     private String toString( Serializable o ) throws IOException {
