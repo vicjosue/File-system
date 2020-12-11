@@ -82,6 +82,8 @@ public class FileSystem {
         Directorio temp = (Directorio) actualDirectory;
         actualDirectory = (Directorio) temp.getData(directory);
         actualPath += directory+"/";
+
+        navigateCallbackEmit();
         
         return actualDirectory;
     }

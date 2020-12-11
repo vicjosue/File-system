@@ -11,6 +11,7 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ToolBar;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
@@ -23,6 +24,7 @@ import jfxtras.styles.jmetro.Style;
 import java.util.Optional;
 
 import FileSystem.UiComponents.ExplorerCell;
+import FileSystem.Utilities.Archivo;
 import FileSystem.Utilities.Directorio;
 import FileSystem.Utilities.Fichero;
 import FileSystem.Utilities.FileSystem;
@@ -37,6 +39,11 @@ public class App extends Application {
     @Override
     public void start(Stage stage) {
         Button navigateUpButton = new Button("Up");
+        navigateUpButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override public void handle(ActionEvent e) {
+                fileSystem.ChangeDirUp();
+            }
+        });
         navigationTextField = new TextField();
         Button navigateGoButton = new Button("Go");
 
@@ -68,6 +75,21 @@ public class App extends Application {
             actualDir.getHashMap().values()
         );
         list.setItems(listItems);
+        list.setOnMouseClicked(new EventHandler<MouseEvent>() {
+
+            @Override
+            public void handle(MouseEvent click) {
+        
+                if (click.getClickCount() == 2) {
+                   //Use ListView's getSelected Item
+                   Fichero selected = list.getSelectionModel().getSelectedItem();
+                   if (selected != null) {
+                       openFichero(selected);
+                   }
+                }
+                list.getSelectionModel().clearSelection();
+            }
+        });
 
         list.setCellFactory(new Callback<ListView<Fichero>, 
             ListCell<Fichero>>() {
@@ -111,6 +133,14 @@ public class App extends Application {
             fileSystem.addFichero(result.get(), new Directorio(result.get()));
         }
 
+    }
+
+    private void openFichero(Fichero item) {
+        if (item instanceof Directorio) {
+            fileSystem.ChangeDirDown(item.name);
+        } else if (item instanceof Archivo) {
+
+        }
     }
 
     public static void main(String[] args) {
