@@ -87,8 +87,8 @@ public class FileSystem {
         actualDirectory.add(name, fichero);
     }
 
-    public void exists(String name) {
-        actualDirectory.contains(name);
+    public boolean exists(String name) {
+        return actualDirectory.contains(name);
     }
 
     public void remove(String name) {
