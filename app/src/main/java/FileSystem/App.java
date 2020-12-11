@@ -10,6 +10,8 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.Scene;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ToolBar;
@@ -29,6 +31,7 @@ import jfxtras.styles.jmetro.FlatTextInputDialog;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import FileSystem.UiComponents.ExplorerCell;
@@ -39,11 +42,14 @@ import FileSystem.Utilities.FileSystem;
 import FileSystem.Utilities.Triplet;
 import javafx.scene.control.ListCell;
 import javafx.util.Callback;
+import javafx.util.Pair;
 
 public class App extends Application {
     FileSystem fileSystem = FileSystem.getInstance();
     TextField navigationTextField;
     ObservableList<Fichero> listItems;
+    ToolBar navigationToolBar;
+    BorderPane border;
 
     @Override
     public void start(Stage stage) {
@@ -85,7 +91,7 @@ public class App extends Application {
             }
         });
 
-        ToolBar toolBar = new ToolBar(
+        navigationToolBar = new ToolBar(
             navigateUpButton,
             navigationTextField,
             navigateGoButton,
@@ -97,6 +103,16 @@ public class App extends Application {
             actionNewFileButton
         );
        
+        Button createFSButton = new Button("Create File System");
+        createFSButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override public void handle(ActionEvent e) {
+                createFS(stage);
+            }
+        });
+
+        ToolBar initialToolbar = new ToolBar(
+            createFSButton
+        );
         
         ListView<Fichero> list = new ListView<Fichero>();
         Directorio actualDir = fileSystem.ChangeDirUp();
@@ -129,8 +145,8 @@ public class App extends Application {
             }
         );
 
-        BorderPane border = new BorderPane();
-        border.setTop(toolBar);
+        border = new BorderPane();
+        border.setTop(initialToolbar);
         border.setCenter(list);
 
         refreshView();
@@ -205,7 +221,82 @@ public class App extends Application {
         Optional<Triplet<String, String, String>> result = dialog.showAndWait();
 
         System.out.println(result);
+        // TODO: Check response
 
+    }
+
+    private void createFS(Stage owner) {
+        FlatDialog<Pair<String, String>> dialog = new FlatDialog<Pair<String, String>>();
+        dialog.initOwner(owner);
+        dialog.setTitle("Create a new FileSystem");
+        dialog.setHeaderText("Create a new FileSystem");
+        
+        // Set the button types.
+        ButtonType createButtonType = new ButtonType("Create", ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(createButtonType, ButtonType.CANCEL);
+
+        // Create the username and password labels and fields.
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        TextField sectorCount = new TextField();
+        TextField sectorSize = new TextField();
+
+        sectorCount.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if (!newValue.matches("\\d{0,7}")) {
+                    sectorCount.setText(oldValue);
+                }
+            }
+        });
+
+        sectorSize.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if (!newValue.matches("\\d{0,7}")) {
+                    sectorSize.setText(oldValue);
+                }
+            }
+        });
+
+        
+
+        grid.add(new Label("Sector count:"), 0, 0);
+        grid.add(sectorCount, 1, 0);
+        grid.add(new Label("Sector size:"), 0, 1);
+        grid.add(sectorSize, 1, 1);
+
+        dialog.getDialogPane().setContent(grid);
+
+        Platform.runLater(() -> sectorCount.requestFocus());
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == createButtonType) {
+                return new Pair<>(sectorCount.getText(), sectorSize.getText());
+            }
+            return null;
+        });
+
+        Optional<Pair<String, String>> result = dialog.showAndWait();
+
+        if (result.isPresent()) {
+            try {
+                fileSystem.create(Integer.parseInt(result.get().getKey()), Integer.parseInt(result.get().getKey()));
+                initToolbar();
+            } catch(IOException e) {
+                // TODO: Show exception
+                System.out.println(e);
+            }
+            
+        }
+
+    }
+
+    private void initToolbar() {
+        border.setTop(navigationToolBar);
     }
 
     private void openFichero(Fichero item) {
