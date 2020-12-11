@@ -131,7 +131,10 @@ public class FileSystem {
                 file.fechaModificacion = time;
                 String serialized = toString(fichero);
                 file.tamano = serialized.length()/2;
-                addToDisk((Archivo) fichero,serialized);
+                if(!addToDisk((Archivo) fichero, serialized)){
+                    return false;//not enough space
+                }
+                
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -202,6 +205,7 @@ public class FileSystem {
           }
         writer.close();
     }
+
 
     public void create(int sectores, int tamano) throws IOException {
         this.sectores=sectores;
