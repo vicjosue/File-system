@@ -61,6 +61,24 @@ public class FileSystem {
     }
 
     // change dir
+    public Directorio goToDir(String path) {
+        String delims = "[/]";
+        String[] dirs = path.split(delims);
+    
+        actualDirectory = (Directorio) data.get(dirs[0]);// root
+        actualPath = dirs[0]+"/";
+        Directorio temp;
+    
+        for (int i = 1; i < dirs.length - 1; i++) {
+            actualPath += dirs[i]+"/";
+            temp = (Directorio) actualDirectory;
+            actualDirectory = (Directorio) temp.getData(dirs[i]);
+        }
+
+        navigateCallbackEmit();
+        return actualDirectory;
+    }
+
     public Directorio ChangeDirUp() {
         String delims = "[/]";
         String[] dirs = actualPath.split(delims);
@@ -74,6 +92,7 @@ public class FileSystem {
             temp = (Directorio) actualDirectory;
             actualDirectory = (Directorio) temp.getData(dirs[i]);
         }
+        
         navigateCallbackEmit();
         return actualDirectory;
     }

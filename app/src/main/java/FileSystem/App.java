@@ -45,7 +45,18 @@ public class App extends Application {
             }
         });
         navigationTextField = new TextField();
+        navigationTextField.setOnAction(new EventHandler<ActionEvent>() {
+            @Override public void handle(ActionEvent e) {
+                navigateToDir();
+            }
+        });
+
         Button navigateGoButton = new Button("Go");
+        navigateGoButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override public void handle(ActionEvent e) {
+                navigateToDir();
+            }
+        });
 
         Button actionCopyButton = new Button("Copy");
         Button actionPasteButton = new Button("Paste");
@@ -141,6 +152,10 @@ public class App extends Application {
         } else if (item instanceof Archivo) {
 
         }
+    }
+
+    private void navigateToDir() {
+        fileSystem.goToDir(navigationTextField.getText());
     }
 
     public static void main(String[] args) {
