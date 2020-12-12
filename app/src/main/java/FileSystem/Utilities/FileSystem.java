@@ -122,6 +122,61 @@ public class FileSystem {
         return actualDirectory;
     }
 
+    public void move(String oldPath, String newPath) {
+        /* this function doesn't change anything from the virtual disk */
+        String delims = "[/]";
+        String[] dirs = oldPath.split(delims);
+    
+        Directorio tempDirectory = (Directorio) data.get(dirs[0]);// root
+        Directorio temp;
+        int i = 1;
+        for (; i < dirs.length-1; i++) {
+            temp = (Directorio) tempDirectory;
+            tempDirectory = (Directorio) temp.getData(dirs[i]);
+        }
+        Archivo file = (Archivo) tempDirectory.getHashMap().get(dirs[i]);
+        tempDirectory.delete(file.name);//delete old file
+
+
+        String[] dirs2 = newPath.split(delims);
+    
+        Directorio tempDirectory2 = (Directorio) data.get(dirs2[0]);// root
+        i = 1;
+        for (; i < dirs2.length-1; i++) {
+            temp = (Directorio) tempDirectory2;
+            tempDirectory2 = (Directorio) temp.getData(dirs2[i]);
+        }
+        tempDirectory2.add(tempDirectory2.name, tempDirectory2);
+
+
+    }
+
+    public void copyFromPath(String originalPath, String newPath) {
+        /* this function doesn't change anything from the virtual disk */
+        String delims = "[/]";
+        String[] dirs = originalPath.split(delims);
+    
+        Directorio tempDirectory = (Directorio) data.get(dirs[0]);// root
+        Directorio temp;
+        int i = 1;
+        for (; i < dirs.length-1; i++) {
+            temp = (Directorio) tempDirectory;
+            tempDirectory = (Directorio) temp.getData(dirs[i]);
+        }
+        Archivo file = (Archivo) tempDirectory.getHashMap().get(dirs[i]);
+
+        String[] dirs2 = newPath.split(delims);
+    
+        Directorio tempDirectory2 = (Directorio) data.get(dirs2[0]);// root
+        i = 1;
+        for (; i < dirs2.length-1; i++) {
+            temp = (Directorio) tempDirectory2;
+            tempDirectory2 = (Directorio) temp.getData(dirs2[i]);
+        }
+        tempDirectory2.add(tempDirectory2.name, tempDirectory2);
+
+    }
+
     public boolean addFichero(String name, Fichero fichero) {        
         if (fichero.getType() == Type.ARCHIVO) {
             try {
@@ -163,6 +218,7 @@ public class FileSystem {
                     lines.set(i, token);
                     break;
                 } else {
+                    remove(fichero.name);
                     return false; //this should not happen, not enough space
                 }
             }
@@ -172,6 +228,8 @@ public class FileSystem {
         for(String str: lines) {
             writer.write(str + System.lineSeparator());
           }
+        System.out.println("added file "+fichero.name+" in: ");
+        System.out.println(fichero.pointers);
         writer.close();
         return true;
     }
