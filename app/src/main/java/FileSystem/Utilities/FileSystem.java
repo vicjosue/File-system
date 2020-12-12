@@ -2,6 +2,8 @@ package FileSystem.Utilities;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -11,6 +13,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.function.Function;
 
 import com.google.common.base.Splitter;
@@ -79,13 +82,13 @@ public class FileSystem {
     public Directorio goToDir(String path) {
         String delims = "[/]";
         String[] dirs = path.split(delims);
-    
+
         actualDirectory = (Directorio) data.get(dirs[0]);// root
-        actualPath = dirs[0]+"/";
+        actualPath = dirs[0] + "/";
         Directorio temp;
-    
+
         for (int i = 1; i < dirs.length; i++) {
-            actualPath += dirs[i]+"/";
+            actualPath += dirs[i] + "/";
             temp = (Directorio) actualDirectory;
             actualDirectory = (Directorio) temp.getData(dirs[i]);
         }
@@ -107,7 +110,7 @@ public class FileSystem {
             temp = (Directorio) actualDirectory;
             actualDirectory = (Directorio) temp.getData(dirs[i]);
         }
-        
+
         navigateCallbackEmit();
         return actualDirectory;
     }
@@ -126,55 +129,148 @@ public class FileSystem {
         /* this function doesn't change anything from the virtual disk */
         String delims = "[/]";
         String[] dirs = oldPath.split(delims);
-    
+
         Directorio tempDirectory = (Directorio) data.get(dirs[0]);// root
         Directorio temp;
         int i = 1;
-        for (; i < dirs.length-1; i++) {
+        for (; i < dirs.length - 1; i++) {
             temp = (Directorio) tempDirectory;
             tempDirectory = (Directorio) temp.getData(dirs[i]);
         }
         Archivo file = (Archivo) tempDirectory.getHashMap().get(dirs[i]);
-        tempDirectory.delete(file.name);//delete old file
-
+        tempDirectory.delete(file.name);// delete old file
 
         String[] dirs2 = newPath.split(delims);
-    
+
         Directorio tempDirectory2 = (Directorio) data.get(dirs2[0]);// root
         i = 1;
-        for (; i < dirs2.length-1; i++) {
+        for (; i < dirs2.length - 1; i++) {
             temp = (Directorio) tempDirectory2;
             tempDirectory2 = (Directorio) temp.getData(dirs2[i]);
         }
-        tempDirectory2.add(tempDirectory2.name, tempDirectory2);
-
+        tempDirectory2.add(file.name, file);
 
     }
 
-    public void copyFromPath(String originalPath, String newPath) {
-        /* this function doesn't change anything from the virtual disk */
+    public void copyFromFileSystem(String originalPath, String newPath) {
         String delims = "[/]";
         String[] dirs = originalPath.split(delims);
-    
+
         Directorio tempDirectory = (Directorio) data.get(dirs[0]);// root
         Directorio temp;
         int i = 1;
-        for (; i < dirs.length-1; i++) {
+        for (; i < dirs.length - 1; i++) {
             temp = (Directorio) tempDirectory;
             tempDirectory = (Directorio) temp.getData(dirs[i]);
         }
         Archivo file = (Archivo) tempDirectory.getHashMap().get(dirs[i]);
 
         String[] dirs2 = newPath.split(delims);
-    
+
         Directorio tempDirectory2 = (Directorio) data.get(dirs2[0]);// root
         i = 1;
-        for (; i < dirs2.length-1; i++) {
+        for (; i < dirs2.length - 1; i++) {
             temp = (Directorio) tempDirectory2;
             tempDirectory2 = (Directorio) temp.getData(dirs2[i]);
         }
-        tempDirectory2.add(tempDirectory2.name, tempDirectory2);
+        tempDirectory2.add(file.name, file);
+    }
 
+    public boolean copyFromComputer(String directoryPath, String virtualPath) {
+        File fichero = new File(directoryPath,virtualPath);
+        if (directoryPath.substring(directoryPath.length() - 1).equals("/")) { // directory
+            copyDirectoryFromComputer(fichero,virtualPath);
+
+        } else { //file
+            String delims = "[/]";
+            String[] dirs = virtualPath.split(delims);
+            String fileName = dirs[dirs.length - 1];
+            int index = fileName.lastIndexOf('.');
+
+            Archivo nuevo = new Archivo(fileName.substring(0, index));// name
+            nuevo.extension = fileName.substring(index+1);// extension
+
+            Scanner myReader; // add text
+
+            try {
+                myReader = new Scanner(fichero);
+                while (myReader.hasNextLine()) {
+                    nuevo.text += myReader.nextLine();
+                }
+                myReader.close();
+            } catch (FileNotFoundException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            return addFichero(nuevo,virtualPath);
+        }
+        return true;
+    }
+
+    private boolean copyDirectoryFromComputer(final File folder,String virtualPath) {
+        /*if false runout of space */
+        for (final File fileEntry : folder.listFiles()) {
+            if (fileEntry.isDirectory()) {
+                return copyDirectoryFromComputer(fileEntry,virtualPath);
+            } else {
+                String delims = "[/]";
+                String[] dirs = virtualPath.split(delims);
+                String fileName = dirs[dirs.length - 1];
+                int index = fileName.lastIndexOf('.');
+    
+                Archivo nuevo = new Archivo(fileName.substring(0, index));// name
+                nuevo.extension = fileName.substring(index+1);// extension
+
+                Scanner myReader; // add text
+
+                try {
+                    myReader = new Scanner(folder);
+                    while (myReader.hasNextLine()) {
+                        nuevo.text += myReader.nextLine();
+                    }
+                    myReader.close();
+                } catch (FileNotFoundException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                return addFichero(nuevo,virtualPath);
+            }
+        }
+        return true;
+    }
+
+
+    public void copytoComputer(String originalPath, String newPath) {
+       
+
+    }
+    private boolean addFichero(Archivo fichero,String destinyPath) {      
+        try {
+            Timestamp time = new Timestamp(new java.util.Date().getTime());
+            fichero.fechaCreacion = time;
+            fichero.fechaModificacion = time;
+            String serialized = toString(fichero);
+            fichero.tamano = serialized.length()/2;
+            if(!addToDisk((Archivo) fichero, serialized)){
+                return false;//not enough space
+            }
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String delims = "[/]";
+        String[] dirs2 = destinyPath.split(delims); //add file to virtual
+
+        Directorio tempDirectory2 = (Directorio) data.get(dirs2[0]);// root
+        Directorio temp;
+        int i = 1;
+        for (; i < dirs2.length - 1; i++) {
+            temp = (Directorio) tempDirectory2;
+            tempDirectory2 = (Directorio) temp.getData(dirs2[i]);
+        }
+        tempDirectory2.add(fichero.name, fichero);
+        return true;
     }
 
     public boolean addFichero(String name, Fichero fichero) {        
@@ -201,7 +297,7 @@ public class FileSystem {
 
     private boolean addToDisk(Archivo fichero,String serialized) throws IOException {
         List<String> lines = Files.readAllLines(Paths.get("disk.txt"), StandardCharsets.UTF_8);
-        if(lines.size()< (sectores-usedSectors.size())){
+        if(lines.size()< (sectores - usedSectors.size())){
             return false; // not enough space
         }
         int i=0;
@@ -217,9 +313,6 @@ public class FileSystem {
                     fichero.pointers.add(i);
                     lines.set(i, token);
                     break;
-                } else {
-                    remove(fichero.name);
-                    return false; //this should not happen, not enough space
                 }
             }
         }

@@ -13,7 +13,7 @@ public class Archivo extends Fichero {
     Timestamp fechaCreacion;
     Timestamp fechaModificacion;
     int tamano;
-    String text;
+    String text = "";
     ArrayList<Integer> pointers = new ArrayList<>();
 
     public Archivo(String name) {
