@@ -10,10 +10,12 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.Scene;
 import javafx.scene.control.ListView;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ToolBar;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonBar.ButtonData;
@@ -21,8 +23,10 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
@@ -142,7 +146,48 @@ public class App extends Application {
             ListCell<Fichero>>() {
                 @Override 
                 public ListCell<Fichero> call(ListView<Fichero> list) {
-                    return new ExplorerCell();
+                    ExplorerCell cell = new ExplorerCell();
+                    
+                    ContextMenu contextMenu = new ContextMenu();
+
+
+                    MenuItem openItem = new MenuItem();
+                    openItem.setText("Open");
+                    openItem.setOnAction(event -> {
+                        openFichero(stage, cell.getItem());
+                    });
+
+                    MenuItem copyItem = new MenuItem();
+                    copyItem.setText("Copy");
+
+                    MenuItem moveItem = new MenuItem();
+                    moveItem.setText("Move");
+
+
+
+
+                    MenuItem deleteItem = new MenuItem();
+                    deleteItem.setText("Remove");
+                    deleteItem.setOnAction(event -> removeFichero(cell.getItem()));
+
+                    if (cell.getItem() instanceof Archivo) {
+                        MenuItem propertiesItem = new MenuItem();
+                        propertiesItem.setText("Properties");
+
+                        contextMenu.getItems().addAll(openItem, propertiesItem, new SeparatorMenuItem(), copyItem, moveItem, new SeparatorMenuItem(), deleteItem);
+                    } else {
+                        contextMenu.getItems().addAll(openItem, new SeparatorMenuItem(), copyItem, moveItem, new SeparatorMenuItem(), deleteItem);
+                    }
+
+
+                    cell.emptyProperty().addListener((obs, wasEmpty, isNowEmpty) -> {
+                        if (isNowEmpty) {
+                            cell.setContextMenu(null);
+                        } else {
+                            cell.setContextMenu(contextMenu);
+                        }
+                    });
+                    return cell ;
                 }
             }
         );
@@ -348,6 +393,10 @@ public class App extends Application {
         } else if (item instanceof Archivo) {
             editFile(owner, (Archivo) item);
         }
+    }
+
+    private void removeFichero(Fichero item) {
+        fileSystem.remove(item.getName());
     }
 
     private void navigateToDir() {
