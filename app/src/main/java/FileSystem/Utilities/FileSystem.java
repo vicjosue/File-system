@@ -199,7 +199,6 @@ public class FileSystem {
                 }
                 myReader.close();
             } catch (FileNotFoundException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             return addFichero(nuevo,virtualPath);
@@ -230,7 +229,6 @@ public class FileSystem {
                     }
                     myReader.close();
                 } catch (FileNotFoundException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
                 return addFichero(nuevo,virtualPath);
@@ -240,10 +238,36 @@ public class FileSystem {
     }
 
 
-    public void copytoComputer(String originalPath, String newPath) {
+    public void copyToComputer(Fichero file, String computerPath) {
+       /* Can copy a folder or a file to computer
+       computerPath requires slash caracter at the end 
        
-
+       
+       */
+        if(file.tipo==Type.ARCHIVO){
+            try {
+                Archivo archivo = (Archivo) file;
+                File myObj = new File(computerPath+file.name+"."+archivo.extension);
+                myObj.createNewFile();//create file
+                FileWriter myWriter = new FileWriter(computerPath+file.name+"."+archivo.extension);
+                myWriter.write(archivo.text);//write file
+                myWriter.close();
+                } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            Directorio directorio = (Directorio) file;
+            for (Map.Entry<String, Fichero> data : directorio.getHashMap().entrySet()) {
+                // System.out.println(data.getKey() + " = " + data.getValue());
+                File realDirectorio = new File(computerPath+data.getKey());
+                if (!realDirectorio.exists()) {
+                    realDirectorio.mkdirs();
+                }
+                copyToComputer(data.getValue(),computerPath+data.getKey()+"/");
+            }
+        }
     }
+    
     private boolean addFichero(Archivo fichero,String destinyPath) {      
         try {
             Timestamp time = new Timestamp(new java.util.Date().getTime());
@@ -270,6 +294,7 @@ public class FileSystem {
             tempDirectory2 = (Directorio) temp.getData(dirs2[i]);
         }
         tempDirectory2.add(fichero.name, fichero);
+        changesCallbackEmit();
         return true;
     }
 
@@ -327,6 +352,32 @@ public class FileSystem {
         return true;
     }
 
+    public boolean modifyFichero(String name, Fichero fichero) {        
+        /* Return true if succesfully added */
+        if (fichero.getType() == Type.ARCHIVO) {
+            try {
+                Archivo file = (Archivo) fichero;
+                Timestamp time = new Timestamp(new java.util.Date().getTime());
+
+                file.fechaModificacion = time;
+
+                String serialized = toString(fichero);
+                file.tamano = serialized.length()/2;
+                remove(name);//delete from disk
+                file.pointers.clear();//delete pointers
+                if(!addToDisk((Archivo) fichero, serialized)){ //new pointers
+                    return false;//not enough space
+                }
+                
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        actualDirectory.add(name, fichero);
+        changesCallbackEmit();
+        return true;
+    }
+
     private String toString( Serializable o ) throws IOException {
         //1 character = 2 bytes
          ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -341,20 +392,27 @@ public class FileSystem {
         return actualDirectory.contains(name);
     }
 
-    public void remove(String name) throws IOException {
-        List<String> lines = Files.readAllLines(Paths.get("disk.txt"), StandardCharsets.UTF_8);
-        Archivo temp = (Archivo) actualDirectory.getHashMap().get(name);
-        ArrayList<Integer> sectoresArchivo = temp.pointers;
-        for(Integer sector: sectoresArchivo){
-            usedSectors.remove(sector);
-            lines.set(sector, "");
-        }
-        actualDirectory.delete(name);
-        BufferedWriter writer = new BufferedWriter(new FileWriter("disk.txt", true));
-        for(String str: lines) {
-            writer.write(str + System.lineSeparator());
-          }
-        writer.close();
+    public void remove(String name)  {
+        /* Remove a file from virtual disk */
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(Paths.get("disk.txt"), StandardCharsets.UTF_8);
+        
+            Archivo temp = (Archivo) actualDirectory.getHashMap().get(name);
+            ArrayList<Integer> sectoresArchivo = temp.pointers;
+            for(Integer sector: sectoresArchivo){
+                usedSectors.remove(sector);
+                lines.set(sector, "");
+            }
+            actualDirectory.delete(name);
+            BufferedWriter writer = new BufferedWriter(new FileWriter("disk.txt", true));
+            for(String str: lines) {
+                writer.write(str + System.lineSeparator());
+            }
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+    }
     }
 
 
