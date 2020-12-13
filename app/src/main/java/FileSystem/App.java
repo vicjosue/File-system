@@ -131,7 +131,7 @@ public class App extends Application {
                    //Use ListView's getSelected Item
                    Fichero selected = list.getSelectionModel().getSelectedItem();
                    if (selected != null) {
-                       openFichero(selected);
+                       openFichero(stage, selected);
                    }
                 }
                 list.getSelectionModel().clearSelection();
@@ -235,7 +235,7 @@ public class App extends Application {
         }
     }
 
-    private void edit(Stage owner, Archivo file) {
+    private void editFile(Stage owner, Archivo file) {
         FlatDialog<String> dialog = new FlatDialog<String>();
         dialog.initOwner(owner);
         dialog.setTitle(file.getName());
@@ -264,6 +264,7 @@ public class App extends Application {
 
         if (result.isPresent()) {
             file.text = result.get();
+            fileSystem.modifyFichero(file.getName(), file);
         }
     }
 
@@ -341,11 +342,11 @@ public class App extends Application {
         border.setTop(navigationToolBar);
     }
 
-    private void openFichero(Fichero item) {
+    private void openFichero(Stage owner, Fichero item) {
         if (item instanceof Directorio) {
             fileSystem.ChangeDirDown(item.getName());
         } else if (item instanceof Archivo) {
-
+            editFile(owner, (Archivo) item);
         }
     }
 
