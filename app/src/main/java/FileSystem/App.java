@@ -223,7 +223,7 @@ public class App extends Application {
         Optional<Triplet<String, String, String>> result = dialog.showAndWait();
 
         if (result.isPresent()) {
-            boolean res = fileSystem.addFichero(name.getText() + "." + extension.getText(), new Archivo(name.getText(), content.getText()));
+            boolean res = fileSystem.addFichero(result.get().getFirst() + "." + result.get().getSecond(), new Archivo(result.get().getFirst(), result.get().getSecond(), result.get().getThird()));
             if (!res) {
                 Alert alert = new Alert(AlertType.ERROR);
                 alert.initOwner(owner);
@@ -232,6 +232,38 @@ public class App extends Application {
                 alert.setContentText("No ha sido posible crear el archivo debido a que no hay suficiente espacio disponible.");
                 alert.showAndWait();
             }
+        }
+    }
+
+    private void edit(Stage owner, Archivo file) {
+        FlatDialog<String> dialog = new FlatDialog<String>();
+        dialog.initOwner(owner);
+        dialog.setTitle(file.getName());
+        dialog.setHeaderText("Viewing: " + file.getName());
+        
+        // Set the button types.
+        ButtonType saveButtonType = new ButtonType("Save", ButtonData.APPLY);
+        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CLOSE);
+
+        TextArea content = new TextArea();
+
+        content.setText(file.text);
+
+        dialog.getDialogPane().setContent(content);
+
+        Platform.runLater(() -> content.requestFocus());
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == saveButtonType) {
+                return content.getText();
+            }
+            return null;
+        });
+
+        Optional<String> result = dialog.showAndWait();
+
+        if (result.isPresent()) {
+            file.text = result.get();
         }
     }
 

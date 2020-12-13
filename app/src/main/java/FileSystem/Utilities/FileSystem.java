@@ -187,8 +187,7 @@ public class FileSystem {
             String fileName = dirs[dirs.length - 1];
             int index = fileName.lastIndexOf('.');
 
-            Archivo nuevo = new Archivo(fileName.substring(0, index));// name
-            nuevo.extension = fileName.substring(index+1);// extension
+            Archivo nuevo = new Archivo(fileName.substring(0, index), fileName.substring(index+1));// name
 
             Scanner myReader; // add text
 
@@ -217,8 +216,7 @@ public class FileSystem {
                 String fileName = dirs[dirs.length - 1];
                 int index = fileName.lastIndexOf('.');
     
-                Archivo nuevo = new Archivo(fileName.substring(0, index));// name
-                nuevo.extension = fileName.substring(index+1);// extension
+                Archivo nuevo = new Archivo(fileName.substring(0, index), fileName.substring(index+1));// name
 
                 Scanner myReader; // add text
 

@@ -13,15 +13,17 @@ public class Archivo extends Fichero {
     Timestamp fechaCreacion;
     Timestamp fechaModificacion;
     int tamano;
-    String text = "";
+    public String text = "";
     ArrayList<Integer> pointers = new ArrayList<>();
 
-    public Archivo(String name) {
+    public Archivo(String name, String extension) {
         super(name);
+        this.extension = extension;
     }
 
-    public Archivo(String name, String text) {
+    public Archivo(String name, String extension, String text) {
         super(name);
+        this.extension = extension;
         this.text = text;
     }
 
