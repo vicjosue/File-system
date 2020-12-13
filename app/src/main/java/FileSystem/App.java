@@ -15,8 +15,10 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.Scene;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ToolBar;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
@@ -220,9 +222,17 @@ public class App extends Application {
 
         Optional<Triplet<String, String, String>> result = dialog.showAndWait();
 
-        System.out.println(result);
-        // TODO: Check response
-
+        if (result.isPresent()) {
+            boolean res = fileSystem.addFichero(name.getText() + "." + extension.getText(), new Archivo(name.getText(), content.getText()));
+            if (!res) {
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.initOwner(owner);
+                alert.setTitle("Error Creando Archivo");
+                alert.setHeaderText("No se ha podido crear el archivo");
+                alert.setContentText("No ha sido posible crear el archivo debido a que no hay suficiente espacio disponible.");
+                alert.showAndWait();
+            }
+        }
     }
 
     private void createFS(Stage owner) {
@@ -301,7 +311,7 @@ public class App extends Application {
 
     private void openFichero(Fichero item) {
         if (item instanceof Directorio) {
-            fileSystem.ChangeDirDown(item.name);
+            fileSystem.ChangeDirDown(item.getName());
         } else if (item instanceof Archivo) {
 
         }

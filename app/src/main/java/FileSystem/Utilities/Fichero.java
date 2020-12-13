@@ -12,7 +12,7 @@ public abstract class Fichero implements java.io.Serializable{
     private static final long serialVersionUID = 1L;
     
     Type tipo;
-    public String name;
+    String name;
 
     public Fichero(String name) {
         this.name = name;
@@ -24,6 +24,10 @@ public abstract class Fichero implements java.io.Serializable{
     
     public Type getType() {
         return this.tipo;
+    }
+
+    public String getName() {
+        return this.name;
     }
 
 }

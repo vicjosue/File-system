@@ -26,7 +26,7 @@ public class ExplorerCell extends ListCell<Fichero> {
         row.getChildren().add(label);
         
         if (item != null) {
-            label.setText(item.name);
+            label.setText(item.getName());
             setGraphic(row);
         }
     }

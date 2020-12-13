@@ -299,7 +299,7 @@ public class FileSystem {
     }
 
     public boolean addFichero(String name, Fichero fichero) {        
-        if (fichero.getType() == Type.ARCHIVO) {
+        if (fichero instanceof Archivo) {
             try {
                 Archivo file = (Archivo) fichero;
                 Timestamp time = new Timestamp(new java.util.Date().getTime());

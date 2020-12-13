@@ -19,5 +19,15 @@ public class Archivo extends Fichero {
     public Archivo(String name) {
         super(name);
     }
+
+    public Archivo(String name, String text) {
+        super(name);
+        this.text = text;
+    }
+
+    @Override
+    public String getName() {
+        return super.name + "." + extension;
+    }
     
 }
