@@ -10,7 +10,6 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.Scene;
@@ -31,7 +30,6 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -169,9 +167,14 @@ public class App extends Application {
 
                     MenuItem copyItem = new MenuItem();
                     copyItem.setText("Copy");
+                    copyItem.setOnAction(event -> copyFile(stage, cell.getItem()));
 
                     MenuItem moveItem = new MenuItem();
                     moveItem.setText("Move");
+                    copyItem.setOnAction(event -> moveFile(stage, cell.getItem()));
+
+                    MenuItem exportItem = new MenuItem();
+                    copyItem.setText("Export");
 
                     MenuItem propertiesItem = new MenuItem();
                     propertiesItem.setText("Properties");
@@ -189,9 +192,9 @@ public class App extends Application {
                         } else {
                             contextMenu.getItems().clear();
                             if (newItem instanceof Archivo) {
-                                contextMenu.getItems().addAll(openItem, propertiesItem, new SeparatorMenuItem(), copyItem, moveItem, new SeparatorMenuItem(), deleteItem);
+                                contextMenu.getItems().addAll(openItem, propertiesItem, new SeparatorMenuItem(), moveItem, copyItem, exportItem, new SeparatorMenuItem(), deleteItem);
                             } else {
-                                contextMenu.getItems().addAll(openItem, new SeparatorMenuItem(), copyItem, moveItem, new SeparatorMenuItem(), deleteItem);
+                                contextMenu.getItems().addAll(openItem, new SeparatorMenuItem(), moveItem, copyItem, exportItem, new SeparatorMenuItem(), deleteItem);
                             }
                         }
                     });
@@ -507,6 +510,34 @@ public class App extends Application {
             if (result.isPresent()){
                 fileSystem.copyFromComputer(selectedFile, result.get());
             }
+        }
+    }
+
+    private void copyFile(Stage owner, Fichero file) {
+        FlatTextInputDialog dialog = new FlatTextInputDialog();
+        dialog.initOwner(owner);
+        dialog.setTitle("Copy selection");
+        dialog.setHeaderText("Enter destination for selection (including it)");
+        dialog.setContentText("Destination:");
+        dialog.getEditor().setText(fileSystem.getActualPath() + file.getName());
+
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent()){
+            fileSystem.copyFromFileSystem(fileSystem.getActualPath() + file.getName(), result.get());
+        }
+    }
+
+    private void moveFile(Stage owner, Fichero file) {
+        FlatTextInputDialog dialog = new FlatTextInputDialog();
+        dialog.initOwner(owner);
+        dialog.setTitle("Move selection");
+        dialog.setHeaderText("Enter destination for selection (including it)");
+        dialog.setContentText("Destination:");
+        dialog.getEditor().setText(fileSystem.getActualPath() + file.getName());
+
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent()){
+            fileSystem.move(fileSystem.getActualPath() + file.getName(), result.get());
         }
     }
 
