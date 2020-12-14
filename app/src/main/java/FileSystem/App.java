@@ -40,6 +40,7 @@ import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Optional;
 
 import FileSystem.Exceptions.PathNotFoundException;
@@ -166,21 +167,29 @@ public class App extends Application {
                     MenuItem moveItem = new MenuItem();
                     moveItem.setText("Move");
 
-
+                    MenuItem propertiesItem = new MenuItem();
+                    propertiesItem.setText("Properties");
+                    propertiesItem.setOnAction(event -> filePropertiesDialog(stage, (Archivo) cell.getItem()));
 
 
                     MenuItem deleteItem = new MenuItem();
                     deleteItem.setText("Remove");
                     deleteItem.setOnAction(event -> removeFichero(cell.getItem()));
 
-                    if (cell.getItem() instanceof Archivo) {
-                        MenuItem propertiesItem = new MenuItem();
-                        propertiesItem.setText("Properties");
 
-                        contextMenu.getItems().addAll(openItem, propertiesItem, new SeparatorMenuItem(), copyItem, moveItem, new SeparatorMenuItem(), deleteItem);
-                    } else {
-                        contextMenu.getItems().addAll(openItem, new SeparatorMenuItem(), copyItem, moveItem, new SeparatorMenuItem(), deleteItem);
-                    }
+                    cell.itemProperty().addListener((obs, oldItem, newItem) -> {
+                        if (newItem == null) {
+                            contextMenu.getItems().clear();
+                        } else {
+                            contextMenu.getItems().clear();
+                            if (newItem instanceof Archivo) {
+                                contextMenu.getItems().addAll(openItem, propertiesItem, new SeparatorMenuItem(), copyItem, moveItem, new SeparatorMenuItem(), deleteItem);
+                            } else {
+                                contextMenu.getItems().addAll(openItem, new SeparatorMenuItem(), copyItem, moveItem, new SeparatorMenuItem(), deleteItem);
+                            }
+                        }
+                    });
+
 
 
                     cell.emptyProperty().addListener((obs, wasEmpty, isNowEmpty) -> {
@@ -286,7 +295,7 @@ public class App extends Application {
     private void editFile(Stage owner, Archivo file) {
         FlatDialog<String> dialog = new FlatDialog<String>();
         dialog.initOwner(owner);
-        dialog.setTitle(file.getName());
+        dialog.setTitle("View: " + file.getName());
         dialog.setHeaderText("Viewing: " + file.getName());
         
         // Set the button types.
@@ -318,6 +327,49 @@ public class App extends Application {
             file.text = result.get();
             fileSystem.modifyFichero(file.getName(), file);
         }
+    }
+    
+    private void filePropertiesDialog(Stage owner, Archivo file) {
+        FlatDialog<String> dialog = new FlatDialog<String>();
+        dialog.initOwner(owner);
+        dialog.setTitle("Properties: " + file.getName());
+        dialog.setHeaderText("Properties");
+
+        // Set the button types.
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CLOSE);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+
+        Label name = new Label(file.name);
+        Label extension = new Label(file.extension);
+        TextArea content = new TextArea(file.text);
+        Label creationDate = new Label(dateFormat.format(file.fechaCreacion));
+        Label modificationDate = new Label(dateFormat.format(file.fechaModificacion));
+        Label size = new Label(String.valueOf(file.tamano));
+        content.setDisable(true);
+
+        grid.add(new Label("Name:"), 0, 0);
+        grid.add(name, 1, 0);
+        grid.add(new Label("Extension:"), 0, 1);
+        grid.add(extension, 1, 1);
+        grid.add(new Label("Size:"), 0, 2);
+        grid.add(size, 1, 2);
+        grid.add(new Label("Creation date:"), 0, 3);
+        grid.add(creationDate, 1, 3);
+        grid.add(new Label("Modification date:"), 0, 4);
+        grid.add(modificationDate, 1, 4);
+        grid.add(new Label("Content:"), 0, 5);
+        grid.add(content, 1, 5);
+
+        dialog.getDialogPane().setContent(grid);
+
+
+        dialog.showAndWait();
     }
 
     private void createFS(Stage owner) {

@@ -9,10 +9,10 @@ public class Archivo extends Fichero {
      */
     private static final long serialVersionUID = 1L;
     
-    String extension;
-    Timestamp fechaCreacion;
-    Timestamp fechaModificacion;
-    int tamano;
+    public String extension;
+    public Timestamp fechaCreacion;
+    public Timestamp fechaModificacion;
+    public int tamano;
     public String text = "";
     ArrayList<Integer> pointers = new ArrayList<>();
 
