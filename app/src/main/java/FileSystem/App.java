@@ -31,6 +31,8 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import jfxtras.styles.jmetro.FlatDialog;
 import jfxtras.styles.jmetro.FlatTextInputDialog;
@@ -40,6 +42,7 @@ import jfxtras.styles.jmetro.Style;
 import java.io.IOException;
 import java.util.Optional;
 
+import FileSystem.Exceptions.PathNotFoundException;
 import FileSystem.UiComponents.ExplorerCell;
 import FileSystem.Utilities.Archivo;
 import FileSystem.Utilities.Directorio;
@@ -290,11 +293,15 @@ public class App extends Application {
         ButtonType saveButtonType = new ButtonType("Save", ButtonData.APPLY);
         dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CLOSE);
 
+        VBox pane = new VBox();
+
         TextArea content = new TextArea();
 
         content.setText(file.text);
 
-        dialog.getDialogPane().setContent(content);
+        pane.getChildren().add(content);
+
+        dialog.getDialogPane().setContent(pane);
 
         Platform.runLater(() -> content.requestFocus());
 
@@ -400,7 +407,11 @@ public class App extends Application {
     }
 
     private void navigateToDir() {
-        fileSystem.goToDir(navigationTextField.getText());
+        try {
+            fileSystem.goToDir(navigationTextField.getText());
+        } catch (PathNotFoundException e) {
+            navigationTextField.setText(fileSystem.getActualPath());
+        }
     }
 
     public static void main(String[] args) {

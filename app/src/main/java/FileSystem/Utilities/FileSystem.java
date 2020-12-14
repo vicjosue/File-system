@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.function.Function;
 
+import FileSystem.Exceptions.PathNotFoundException;
+
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -73,25 +75,25 @@ public class FileSystem {
     }
 
     // change dir
-    public Directorio goToDir(String path) throws Exception 
+    public Directorio goToDir(String path) throws PathNotFoundException 
     {
         String delims = "[/]";
         String[] dirs = path.split(delims);
 
         Directorio actual = (Directorio) data.get(dirs[0]);// root
-        actualPath = dirs[0] + "/";
+        String tempPath = dirs[0] + "/";
         Directorio temp;
 
         for (int i = 1; i < dirs.length; i++) {
-            actualPath += dirs[i] + "/";
+            tempPath += dirs[i] + "/";
             temp = (Directorio) actual;
-            if(temp.contains(dirs[i])){
+            if(temp.contains(dirs[i]) && temp.getData(dirs[i]) instanceof Directorio){
                 actual = (Directorio) temp.getData(dirs[i]);
-            }
-            else {
-               throw new Exception("Path not found");
+            } else {
+               throw new PathNotFoundException();
             }
         }
+        actualPath = tempPath;
         actualDirectory=actual;
         navigateCallbackEmit();
         return actualDirectory;
@@ -410,6 +412,7 @@ public class FileSystem {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        changesCallbackEmit();
     }
 
 
