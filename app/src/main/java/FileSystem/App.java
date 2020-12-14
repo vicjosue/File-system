@@ -33,6 +33,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import jfxtras.styles.jmetro.FlatDialog;
@@ -85,8 +86,11 @@ public class App extends Application {
             }
         });
 
-        Button actionImportButton = new Button("Import");
-        actionImportButton.setOnAction(event -> importFile(stage));
+        Button actionImportFileButton = new Button("Import file");
+        actionImportFileButton.setOnAction(event -> importFile(stage));
+
+        Button actionImportDirButton = new Button("Import directory");
+        actionImportDirButton.setOnAction(event -> importDirectory(stage));
 
         Button actionNewDirButton = new Button("New Dir");
 
@@ -108,7 +112,8 @@ public class App extends Application {
             navigationTextField,
             navigateGoButton,
             new Separator(),
-            actionImportButton,
+            actionImportFileButton,
+            actionImportDirButton,
             new Separator(),
             actionNewDirButton,
             actionNewFileButton
@@ -475,13 +480,32 @@ public class App extends Application {
             FlatTextInputDialog dialog = new FlatTextInputDialog();
             dialog.initOwner(owner);
             dialog.setTitle("Enter destination");
-            dialog.setHeaderText("Enter destination for selected file");
+            dialog.setHeaderText("Enter destination for selected file (including it)");
             dialog.setContentText("Destination:");
             dialog.getEditor().setText(fileSystem.getActualPath() + selectedFile.getName());
 
             Optional<String> result = dialog.showAndWait();
             if (result.isPresent()){
-                fileSystem.copyFromComputer(selectedFile.getAbsolutePath(), result.get());
+                fileSystem.copyFromComputer(selectedFile, result.get());
+            }
+        }
+    }
+
+    private void importDirectory(Stage owner) {
+        DirectoryChooser fileChooser = new DirectoryChooser();
+        fileChooser.setTitle("Open directory to import");
+        File selectedFile = fileChooser.showDialog(owner);
+        if (selectedFile != null) {
+            FlatTextInputDialog dialog = new FlatTextInputDialog();
+            dialog.initOwner(owner);
+            dialog.setTitle("Enter destination");
+            dialog.setHeaderText("Enter destination for selected directory (including it)");
+            dialog.setContentText("Destination:");
+            dialog.getEditor().setText(fileSystem.getActualPath() + selectedFile.getName());
+
+            Optional<String> result = dialog.showAndWait();
+            if (result.isPresent()){
+                fileSystem.copyFromComputer(selectedFile, result.get());
             }
         }
     }

@@ -178,8 +178,8 @@ public class FileSystem {
         tempDirectory2.add(file.name, file);
     }
 
-    public boolean copyFromComputer(String directoryPath, String virtualPath) {
-        File fichero = new File(directoryPath,virtualPath);
+    public boolean copyFromComputer(File fichero, String virtualPath) {
+        String directoryPath = fichero.getAbsolutePath();
         if (directoryPath.substring(directoryPath.length() - 1).equals("/")) { // directory
             copyDirectoryFromComputer(fichero,virtualPath);
 
