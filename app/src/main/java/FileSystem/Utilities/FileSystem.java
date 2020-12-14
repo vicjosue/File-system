@@ -1,22 +1,16 @@
 package FileSystem.Utilities;
 
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.function.Function;
-
-import com.google.common.base.Splitter;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -70,7 +64,7 @@ public class FileSystem {
             if (data.getKey() == fichero) {
                 result.put(path, data.getValue());
             }
-            if (data.getValue().getType() == Type.DIRECTORIO) {
+            if (data.getValue() instanceof Directorio) {
                 Directorio temp = (Directorio) data.getValue();
                 search(fichero, path + "/" + data.getValue(), temp, result);
 
@@ -79,20 +73,26 @@ public class FileSystem {
     }
 
     // change dir
-    public Directorio goToDir(String path) {
+    public Directorio goToDir(String path) throws Exception 
+    {
         String delims = "[/]";
         String[] dirs = path.split(delims);
 
-        actualDirectory = (Directorio) data.get(dirs[0]);// root
+        Directorio actual = (Directorio) data.get(dirs[0]);// root
         actualPath = dirs[0] + "/";
         Directorio temp;
 
         for (int i = 1; i < dirs.length; i++) {
             actualPath += dirs[i] + "/";
-            temp = (Directorio) actualDirectory;
-            actualDirectory = (Directorio) temp.getData(dirs[i]);
+            temp = (Directorio) actual;
+            if(temp.contains(dirs[i])){
+                actual = (Directorio) temp.getData(dirs[i]);
+            }
+            else {
+               throw new Exception("Path not found");
+            }
         }
-
+        actualDirectory=actual;
         navigateCallbackEmit();
         return actualDirectory;
     }
@@ -242,7 +242,7 @@ public class FileSystem {
        
        
        */
-        if(file.tipo==Type.ARCHIVO){
+        if(file instanceof Archivo){
             try {
                 Archivo archivo = (Archivo) file;
                 File myObj = new File(computerPath+file.name+"."+archivo.extension);
@@ -271,12 +271,11 @@ public class FileSystem {
             Timestamp time = new Timestamp(new java.util.Date().getTime());
             fichero.fechaCreacion = time;
             fichero.fechaModificacion = time;
-            String serialized = toString(fichero);
-            fichero.tamano = serialized.length()/2;
+            String serialized = fichero.toString();
+            fichero.tamano = serialized.length();
             if(!addToDisk((Archivo) fichero, serialized)){
                 return false;//not enough space
             }
-            
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -296,15 +295,15 @@ public class FileSystem {
         return true;
     }
 
-    public boolean addFichero(String name, Fichero fichero) {        
+    public boolean addFichero(String name, Fichero fichero) { 
         if (fichero instanceof Archivo) {
             try {
                 Archivo file = (Archivo) fichero;
                 Timestamp time = new Timestamp(new java.util.Date().getTime());
                 file.fechaCreacion = time;
                 file.fechaModificacion = time;
-                String serialized = toString(fichero);
-                file.tamano = serialized.length()/2;
+                String serialized = fichero.toString();
+                file.tamano = serialized.length();
                 if(!addToDisk((Archivo) fichero, serialized)){
                     return false;//not enough space
                 }
@@ -317,33 +316,41 @@ public class FileSystem {
         changesCallbackEmit();
         return true;
     }
+    private List<String> splitEqually(String text, int size) {
+        // Give the list the right capacity to start with. You could use an array
+        // instead if you wanted.
+        List<String> ret = new ArrayList<String>((text.length() + size - 1) / size);
+    
+        for (int start = 0; start < text.length(); start += size) {
+            ret.add(text.substring(start, Math.min(text.length(), start + size)));
+        }
+        
+        return ret;
+    }
+
 
     private boolean addToDisk(Archivo fichero,String serialized) throws IOException {
         List<String> lines = Files.readAllLines(Paths.get("disk.txt"), StandardCharsets.UTF_8);
-        if(lines.size()< (sectores - usedSectors.size())){
+        List<String> splittedFile = splitEqually(serialized,this.tamano);
+        if(splittedFile.size() > (sectores - usedSectors.size())){
             return false; // not enough space
         }
         int i=0;
-        for(final String token :
-            Splitter
-                .fixedLength(tamano/2)
-                .split(serialized)){
-                    
-            while (i<sectores) { //search for a free sector
-                i++;
-                if(!usedSectors.contains(i)){
-                    usedSectors.add(i);
-                    fichero.pointers.add(i);
-                    lines.set(i, token);
-                    break;
-                }
+        for(String token :splittedFile){
+            if(!usedSectors.contains(i)){
+                usedSectors.add(i);
+                fichero.pointers.add(i);
+                lines.set(i, token);
             }
+            i++;
         }
-
-        BufferedWriter writer = new BufferedWriter(new FileWriter("disk.txt", true));
+        BufferedWriter writer = new BufferedWriter(new FileWriter("disk.txt"));
+        writer.write("");//delete old stuff
+        writer.close();
+        writer = new BufferedWriter(new FileWriter("disk.txt", true));
         for(String str: lines) {
             writer.write(str + System.lineSeparator());
-          }
+        }
         System.out.println("added file "+fichero.name+" in: ");
         System.out.println(fichero.pointers);
         writer.close();
@@ -352,15 +359,14 @@ public class FileSystem {
 
     public boolean modifyFichero(String name, Fichero fichero) {        
         /* Return true if succesfully added */
-        if (fichero.getType() == Type.ARCHIVO) {
+        if (fichero instanceof Archivo) {
             try {
                 Archivo file = (Archivo) fichero;
                 Timestamp time = new Timestamp(new java.util.Date().getTime());
-
                 file.fechaModificacion = time;
-
-                String serialized = toString(fichero);
-                file.tamano = serialized.length()/2;
+                String serialized = fichero.toString();
+                System.out.println(serialized);
+                file.tamano = serialized.length();
                 remove(name);//delete from disk
                 file.pointers.clear();//delete pointers
                 if(!addToDisk((Archivo) fichero, serialized)){ //new pointers
@@ -375,16 +381,6 @@ public class FileSystem {
         changesCallbackEmit();
         return true;
     }
-
-    private String toString( Serializable o ) throws IOException {
-        //1 character = 2 bytes
-         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-         ObjectOutputStream oos = new ObjectOutputStream( baos );
-         oos.writeObject( o );
-         oos.close();
-         return Base64.getEncoder().encodeToString(baos.toByteArray()); 
-     }
-    
 
     public boolean exists(String name) {
         return actualDirectory.contains(name);
@@ -403,24 +399,34 @@ public class FileSystem {
                 lines.set(sector, "");
             }
             actualDirectory.delete(name);
-            BufferedWriter writer = new BufferedWriter(new FileWriter("disk.txt", true));
+            BufferedWriter writer = new BufferedWriter(new FileWriter("disk.txt"));
+            writer.write("");//delete old stuff
+            writer.close();
+            writer = new BufferedWriter(new FileWriter("disk.txt", true));
             for(String str: lines) {
                 writer.write(str + System.lineSeparator());
             }
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
-    }
+        }
     }
 
 
     public void create(int sectores, int tamano) throws IOException {
         this.sectores=sectores;
         this.tamano=tamano;
-        
         BufferedWriter writer = new BufferedWriter(new FileWriter("disk.txt"));
         writer.write("");//delete old stuff
         writer.close();
+
+        File file = new File("disk.txt");
+        FileWriter fr = new FileWriter(file, true);
+        for(int i = 0; i < sectores; i++) {
+            fr.write(System.lineSeparator());
+        }
+        
+        fr.close();
     }
 
     public String getActualPath() {
