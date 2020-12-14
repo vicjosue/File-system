@@ -25,9 +25,12 @@ public class ExplorerCell extends ListCell<Fichero> {
         row.getChildren().add(iconFont1);
         row.getChildren().add(label);
         
-        if (item != null) {
+        if (item != null && !empty) {
             label.setText(item.getName());
             setGraphic(row);
+        } else {
+            setGraphic(null);
+            label.setText("");
         }
     }
 }
