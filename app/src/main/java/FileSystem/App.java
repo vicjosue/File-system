@@ -171,10 +171,11 @@ public class App extends Application {
 
                     MenuItem moveItem = new MenuItem();
                     moveItem.setText("Move");
-                    copyItem.setOnAction(event -> moveFile(stage, cell.getItem()));
+                    moveItem.setOnAction(event -> moveFile(stage, cell.getItem()));
 
                     MenuItem exportItem = new MenuItem();
-                    copyItem.setText("Export");
+                    exportItem.setText("Export");
+                    exportItem.setOnAction(event -> exportFile(stage, cell.getItem()));
 
                     MenuItem propertiesItem = new MenuItem();
                     propertiesItem.setText("Properties");
@@ -538,6 +539,25 @@ public class App extends Application {
         Optional<String> result = dialog.showAndWait();
         if (result.isPresent()){
             fileSystem.move(fileSystem.getActualPath() + file.getName(), result.get());
+        }
+    }
+
+    private void exportFile(Stage owner, Fichero file) {
+        DirectoryChooser fileChooser = new DirectoryChooser();
+        fileChooser.setTitle("Choose directory to export to");
+        File selectedFile = fileChooser.showDialog(owner);
+        if (selectedFile != null) {
+            FlatTextInputDialog dialog = new FlatTextInputDialog();
+            dialog.initOwner(owner);
+            dialog.setTitle("Export destination");
+            dialog.setHeaderText("Enter export destination");
+            dialog.setContentText("Destination:");
+            dialog.getEditor().setText(selectedFile.getAbsolutePath() + selectedFile.getName());
+
+            Optional<String> result = dialog.showAndWait();
+            if (result.isPresent()){
+                fileSystem.copyToComputer(file, result.get());
+            }
         }
     }
 
