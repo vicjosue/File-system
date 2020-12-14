@@ -372,7 +372,7 @@ public class App extends Application {
 
         if (result.isPresent()) {
             try {
-                fileSystem.create(Integer.parseInt(result.get().getKey()), Integer.parseInt(result.get().getKey()));
+                fileSystem.create(Integer.parseInt(result.get().getKey()), Integer.parseInt(result.get().getValue()));
                 initToolbar();
             } catch(IOException e) {
                 // TODO: Show exception
