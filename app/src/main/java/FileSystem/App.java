@@ -552,7 +552,7 @@ public class App extends Application {
             dialog.setTitle("Export destination");
             dialog.setHeaderText("Enter export destination");
             dialog.setContentText("Destination:");
-            dialog.getEditor().setText(selectedFile.getAbsolutePath() + selectedFile.getName());
+            dialog.getEditor().setText(selectedFile.getAbsolutePath() + "\\");
 
             Optional<String> result = dialog.showAndWait();
             if (result.isPresent()){
