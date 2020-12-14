@@ -33,12 +33,14 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import jfxtras.styles.jmetro.FlatDialog;
 import jfxtras.styles.jmetro.FlatTextInputDialog;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Optional;
@@ -83,8 +85,8 @@ public class App extends Application {
             }
         });
 
-        Button actionCopyButton = new Button("Copy");
-        Button actionPasteButton = new Button("Paste");
+        Button actionImportButton = new Button("Import");
+        actionImportButton.setOnAction(event -> importFile(stage));
 
         Button actionNewDirButton = new Button("New Dir");
 
@@ -106,8 +108,7 @@ public class App extends Application {
             navigationTextField,
             navigateGoButton,
             new Separator(),
-            actionCopyButton,
-            actionPasteButton,
+            actionImportButton,
             new Separator(),
             actionNewDirButton,
             actionNewFileButton
@@ -463,6 +464,25 @@ public class App extends Application {
             fileSystem.goToDir(navigationTextField.getText());
         } catch (PathNotFoundException e) {
             navigationTextField.setText(fileSystem.getActualPath());
+        }
+    }
+
+    private void importFile(Stage owner) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open file to import");
+        File selectedFile = fileChooser.showOpenDialog(owner);
+        if (selectedFile != null) {
+            FlatTextInputDialog dialog = new FlatTextInputDialog();
+            dialog.initOwner(owner);
+            dialog.setTitle("Enter destination");
+            dialog.setHeaderText("Enter destination for selected file");
+            dialog.setContentText("Destination:");
+            dialog.getEditor().setText(fileSystem.getActualPath() + selectedFile.getName());
+
+            Optional<String> result = dialog.showAndWait();
+            if (result.isPresent()){
+                fileSystem.copyFromComputer(selectedFile.getAbsolutePath(), result.get());
+            }
         }
     }
 
