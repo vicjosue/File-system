@@ -35,7 +35,7 @@ public class Archivo extends Fichero {
     @Override
     public String toString() {
         return super.name + "." + extension + " fechaCreacion: "+ fechaCreacion.toString() +
-        " fechaModificacion: " + fechaModificacion.toString() + " tamano: "+ String.valueOf(tamano)+ 
+        " fechaModificacion: " + fechaModificacion.toString() + " tamano: "+ Integer.toString(tamano)+ 
         " text: " + text;
     }
     

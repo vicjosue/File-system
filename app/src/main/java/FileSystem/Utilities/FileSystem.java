@@ -306,7 +306,7 @@ public class FileSystem {
                 file.fechaModificacion = time;
                 String serialized = fichero.toString();
                 file.tamano = serialized.length();
-                if(!addToDisk((Archivo) fichero, serialized)){
+                if(!addToDisk((Archivo) fichero, file.toString())){
                     return false;//not enough space
                 }
                 
@@ -342,7 +342,7 @@ public class FileSystem {
             if(!usedSectors.contains(i)){
                 usedSectors.add(i);
                 fichero.pointers.add(i);
-                lines.set(i, token);
+                lines.set(i, token+System.lineSeparator());
             }
             i++;
         }
@@ -351,7 +351,7 @@ public class FileSystem {
         writer.close();
         writer = new BufferedWriter(new FileWriter("disk.txt", true));
         for(String str: lines) {
-            writer.write(str + System.lineSeparator());
+            writer.write(str);
         }
         System.out.println("added file "+fichero.name+" in: ");
         System.out.println(fichero.pointers);
@@ -367,7 +367,6 @@ public class FileSystem {
                 Timestamp time = new Timestamp(new java.util.Date().getTime());
                 file.fechaModificacion = time;
                 String serialized = fichero.toString();
-                System.out.println(serialized);
                 file.tamano = serialized.length();
                 remove(name);//delete from disk
                 file.pointers.clear();//delete pointers
@@ -390,34 +389,80 @@ public class FileSystem {
 
     public void remove(String name)  {
         /* Remove a file from virtual disk */
-        List<String> lines;
-        try {
-            lines = Files.readAllLines(Paths.get("disk.txt"), StandardCharsets.UTF_8);
-        
-            Archivo temp = (Archivo) actualDirectory.getHashMap().get(name);
-            ArrayList<Integer> sectoresArchivo = temp.pointers;
-            for(Integer sector: sectoresArchivo){
-                usedSectors.remove(sector);
-                lines.set(sector, "");
+        Fichero fichero = actualDirectory.getHashMap().get(name);
+        if( fichero instanceof Archivo ){
+            List<String> lines;
+            try {
+                lines = Files.readAllLines(Paths.get("disk.txt"), StandardCharsets.UTF_8);
+                Archivo temp = (Archivo) fichero;
+                ArrayList<Integer> sectoresArchivo = temp.pointers;
+                for(Integer sector: sectoresArchivo){
+                    usedSectors.remove(sector);
+                    lines.set(sector, ""+System.lineSeparator());
+                }
+                actualDirectory.delete(name);
+                BufferedWriter writer = new BufferedWriter(new FileWriter("disk.txt"));
+                writer.write("");//delete old stuff
+                writer.close();
+                writer = new BufferedWriter(new FileWriter("disk.txt", true));
+                for(String str: lines) {
+                    writer.write(str);
+                }
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            Directorio directorio = (Directorio) fichero;
+            for (Map.Entry<String, Fichero> data : directorio.getHashMap().entrySet()) {
+                // System.out.println(data.getKey() + " = " + data.getValue());
+                removeRecursive(data.getValue());
+                directorio.delete(data.getKey());
             }
             actualDirectory.delete(name);
-            BufferedWriter writer = new BufferedWriter(new FileWriter("disk.txt"));
-            writer.write("");//delete old stuff
-            writer.close();
-            writer = new BufferedWriter(new FileWriter("disk.txt", true));
-            for(String str: lines) {
-                writer.write(str + System.lineSeparator());
-            }
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
         changesCallbackEmit();
     }
 
+    private void removeRecursive(Fichero fichero){
+        if( fichero instanceof Archivo ){
+            List<String> lines;
+            try {
+                lines = Files.readAllLines(Paths.get("disk.txt"), StandardCharsets.UTF_8);
+                Archivo temp = (Archivo) fichero;
+                ArrayList<Integer> sectoresArchivo = temp.pointers;
+                for(Integer sector: sectoresArchivo){
+                    usedSectors.remove(sector);
+                    lines.set(sector, ""+System.lineSeparator());
+                }
+                BufferedWriter writer = new BufferedWriter(new FileWriter("disk.txt"));
+                writer.write("");//delete old stuff
+                writer.close();
+                writer = new BufferedWriter(new FileWriter("disk.txt", true));
+                for(String str: lines) {
+                    writer.write(str);
+                }
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            Directorio directorio = (Directorio) fichero;
+            for (Map.Entry<String, Fichero> data : directorio.getHashMap().entrySet()) {
+                // System.out.println(data.getKey() + " = " + data.getValue());
+                if (data.getValue() instanceof Directorio) {
+                    removeRecursive(data.getValue());
+                    directorio.delete(data.getKey());
+                } else {
+                    directorio.delete(data.getKey());
+                }
+            }
+        }
+    }
+
 
     public void create(int sectores, int tamano) throws IOException {
-        this.sectores=sectores;
+        this.sectores=sectores;//inicia en 0
         this.tamano=tamano;
         BufferedWriter writer = new BufferedWriter(new FileWriter("disk.txt"));
         writer.write("");//delete old stuff
