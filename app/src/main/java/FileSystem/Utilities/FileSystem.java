@@ -139,9 +139,29 @@ public class FileSystem {
             temp = (Directorio) tempDirectory;
             tempDirectory = (Directorio) temp.getData(dirs[i]);
         }
-        Archivo file = (Archivo) tempDirectory.getHashMap().get(dirs[i]);
-        tempDirectory.delete(file.name);// delete old file
-
+        
+        Archivo file = (Archivo) tempDirectory.getHashMap().get(dirs[i]);//
+        tempDirectory.delete(dirs[i]);
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(Paths.get("disk.txt"), StandardCharsets.UTF_8);
+            ArrayList<Integer> sectoresArchivo = file.pointers;
+            for(Integer sector: sectoresArchivo){
+                usedSectors.remove(sector);
+                lines.set(sector, ""+System.lineSeparator());
+            }
+            file.pointers.clear();
+            BufferedWriter writer = new BufferedWriter(new FileWriter("disk.txt"));
+            writer.write("");//delete old stuff
+            writer.close();
+            writer = new BufferedWriter(new FileWriter("disk.txt", true));
+            for(String str: lines) {
+                writer.write(str);
+            }
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         String[] dirs2 = newPath.split(delims);
 
         Directorio tempDirectory2 = (Directorio) data.get(dirs2[0]);// root
@@ -150,8 +170,13 @@ public class FileSystem {
             temp = (Directorio) tempDirectory2;
             tempDirectory2 = (Directorio) temp.getData(dirs2[i]);
         }
+        try {
+            addToDisk((Archivo) file, file.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         tempDirectory2.add(file.name, file);
-
+        changesCallbackEmit();
     }
 
     public void copyFromFileSystem(String originalPath, String newPath) {
