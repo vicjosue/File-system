@@ -105,6 +105,9 @@ public class App extends Application {
             }
         });
 
+        Button actionFindButton = new Button("Search");
+        actionFindButton.setOnAction(event -> openSearch(stage));
+
         navigationToolBar = new ToolBar(
             navigateUpButton,
             navigationTextField,
@@ -114,7 +117,9 @@ public class App extends Application {
             actionImportDirButton,
             new Separator(),
             actionNewDirButton,
-            actionNewFileButton
+            actionNewFileButton,
+            new Separator(),
+            actionFindButton
         );
        
         Button createFSButton = new Button("Create File System");
@@ -559,6 +564,11 @@ public class App extends Application {
                 fileSystem.copyToComputer(file, result.get());
             }
         }
+    }
+
+    private void openSearch(Stage owner) {
+        SearchDialog search = new SearchDialog(owner);
+        search.showAndWait();
     }
 
     public static void main(String[] args) {
