@@ -175,7 +175,7 @@ public class FileSystem {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        tempDirectory2.add(file.name, file);
+        tempDirectory2.add(file.getName(), file);
         changesCallbackEmit();
     }
 
@@ -200,19 +200,33 @@ public class FileSystem {
             temp = (Directorio) tempDirectory2;
             tempDirectory2 = (Directorio) temp.getData(dirs2[i]);
         }
-        tempDirectory2.add(file.name, file);
+        tempDirectory2.add(file.getName(), file);
     }
 
     public boolean copyFromComputer(File fichero, String virtualPath) {
-        String directoryPath = fichero.getAbsolutePath();
-        if (directoryPath.substring(directoryPath.length() - 1).equals("/")) { // directory
+        String delims = "[/]";
+        String[] dirs = virtualPath.split(delims);
+        Directorio tempDirectory2 = (Directorio) data.get(dirs[0]);// root
+        Directorio temp;
+        int i = 1;
+        for (; i < dirs.length - 1; i++) {
+            temp = (Directorio) tempDirectory2;
+            tempDirectory2 = (Directorio) temp.getData(dirs[i]);
+        }
+        if (fichero.isDirectory()) { // directory
+            temp = (Directorio) tempDirectory2;
+            tempDirectory2 = (Directorio) temp.getData(dirs[i]);
+            Directorio nuevo = new Directorio(fichero.getName());
+            tempDirectory2.add(nuevo.getName(), nuevo);
             copyDirectoryFromComputer(fichero,virtualPath);
 
         } else { //file
-            String delims = "[/]";
-            String[] dirs = virtualPath.split(delims);
             String fileName = dirs[dirs.length - 1];
             int index = fileName.lastIndexOf('.');
+            //System.out.println(fileName);
+            //System.out.println(index);
+            //System.out.println(fileName.substring(0, index));
+            //System.out.println(fileName.substring(index+1));
 
             Archivo nuevo = new Archivo(fileName.substring(0, index), fileName.substring(index+1));// name
 
@@ -242,7 +256,8 @@ public class FileSystem {
                 String[] dirs = virtualPath.split(delims);
                 String fileName = dirs[dirs.length - 1];
                 int index = fileName.lastIndexOf('.');
-    
+                
+                fileName.substring(index+1);
                 Archivo nuevo = new Archivo(fileName.substring(0, index), fileName.substring(index+1));// name
 
                 Scanner myReader; // add text
@@ -272,9 +287,9 @@ public class FileSystem {
         if(file instanceof Archivo){
             try {
                 Archivo archivo = (Archivo) file;
-                File myObj = new File(computerPath+file.name+"."+archivo.extension);
+                File myObj = new File(computerPath+file.getName());
                 myObj.createNewFile();//create file
-                FileWriter myWriter = new FileWriter(computerPath+file.name+"."+archivo.extension);
+                FileWriter myWriter = new FileWriter(computerPath+file.getName());
                 myWriter.write(archivo.text);//write file
                 myWriter.close();
                 } catch (IOException e) {
@@ -317,7 +332,7 @@ public class FileSystem {
             temp = (Directorio) tempDirectory2;
             tempDirectory2 = (Directorio) temp.getData(dirs2[i]);
         }
-        tempDirectory2.add(fichero.name, fichero);
+        tempDirectory2.add(fichero.getName(), fichero);
         changesCallbackEmit();
         return true;
     }
@@ -378,7 +393,7 @@ public class FileSystem {
         for(String str: lines) {
             writer.write(str);
         }
-        System.out.println("added file "+fichero.name+" in: ");
+        System.out.println("added file "+fichero.getName()+" in: ");
         System.out.println(fichero.pointers);
         writer.close();
         return true;
@@ -414,7 +429,9 @@ public class FileSystem {
 
     public void remove(String name)  {
         /* Remove a file from virtual disk */
+        System.out.println(name);
         Fichero fichero = actualDirectory.getHashMap().get(name);
+        
         if( fichero instanceof Archivo ){
             List<String> lines;
             try {
