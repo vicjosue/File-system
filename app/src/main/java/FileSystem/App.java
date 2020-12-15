@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Optional;
 
+import FileSystem.Exceptions.InsufficientSpaceException;
 import FileSystem.Exceptions.PathNotFoundException;
 import FileSystem.UiComponents.ExplorerCell;
 import FileSystem.Utilities.Archivo;
@@ -249,7 +250,11 @@ public class App extends Application {
 
         Optional<String> result = dialog.showAndWait();
         if (result.isPresent()){
-            fileSystem.addFichero(result.get(), new Directorio(result.get()));
+            try {
+                fileSystem.addFichero(result.get(), new Directorio(result.get()));
+            } catch (InsufficientSpaceException e) {
+                insufficientSpaceErrorAlert(owner);
+            }
         }
 
     }
@@ -295,16 +300,21 @@ public class App extends Application {
         Optional<Triplet<String, String, String>> result = dialog.showAndWait();
 
         if (result.isPresent()) {
-            boolean res = fileSystem.addFichero(result.get().getFirst() + "." + result.get().getSecond(), new Archivo(result.get().getFirst(), result.get().getSecond(), result.get().getThird()));
-            if (!res) {
-                Alert alert = new Alert(AlertType.ERROR);
-                alert.initOwner(owner);
-                alert.setTitle("Error Creando Archivo");
-                alert.setHeaderText("No se ha podido crear el archivo");
-                alert.setContentText("No ha sido posible crear el archivo debido a que no hay suficiente espacio disponible.");
-                alert.showAndWait();
+            try {
+                fileSystem.addFichero(result.get().getFirst() + "." + result.get().getSecond(), new Archivo(result.get().getFirst(), result.get().getSecond(), result.get().getThird()));
+            } catch (InsufficientSpaceException e) {
+                insufficientSpaceErrorAlert(owner);
             }
         }
+    }
+
+    private void insufficientSpaceErrorAlert(Stage owner) {
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.initOwner(owner);
+        alert.setTitle("Error");
+        alert.setHeaderText("Not enough space");
+        alert.setContentText("There's not enough space remaining in the file system to execute the requested action.");
+        alert.showAndWait();
     }
 
     private void editFile(Stage owner, Archivo file) {
@@ -495,7 +505,11 @@ public class App extends Application {
 
             Optional<String> result = dialog.showAndWait();
             if (result.isPresent()){
-                fileSystem.copyFromComputer(selectedFile, result.get());
+                try {
+                    fileSystem.copyFromComputer(selectedFile, result.get());
+                } catch (InsufficientSpaceException e) {
+                    insufficientSpaceErrorAlert(owner);
+                }
             }
         }
     }
@@ -514,7 +528,11 @@ public class App extends Application {
 
             Optional<String> result = dialog.showAndWait();
             if (result.isPresent()){
-                fileSystem.copyFromComputer(selectedFile, result.get());
+                try {
+                    fileSystem.copyFromComputer(selectedFile, result.get());
+                } catch (InsufficientSpaceException e) {
+                    insufficientSpaceErrorAlert(owner);
+                }
             }
         }
     }
