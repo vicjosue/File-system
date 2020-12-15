@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.function.Function;
 
+import FileSystem.Exceptions.InsufficientSpaceException;
 import FileSystem.Exceptions.PathNotFoundException;
 
 import java.nio.charset.StandardCharsets;
@@ -203,7 +204,7 @@ public class FileSystem {
         tempDirectory2.add(file.getName(), file);
     }
 
-    public boolean copyFromComputer(File fichero, String virtualPath) {
+    public boolean copyFromComputer(File fichero, String virtualPath) throws InsufficientSpaceException {
         String delims = "[/]";
         String[] dirs = virtualPath.split(delims);
         Directorio tempDirectory2 = (Directorio) data.get(dirs[0]);// root
@@ -246,7 +247,7 @@ public class FileSystem {
         return true;
     }
 
-    private boolean copyDirectoryFromComputer(final File folder,String virtualPath) {
+    private boolean copyDirectoryFromComputer(final File folder,String virtualPath) throws InsufficientSpaceException {
         /*if false runout of space */
         for (final File fileEntry : folder.listFiles()) {
             if (fileEntry.isDirectory()) {
@@ -308,7 +309,7 @@ public class FileSystem {
         }
     }
     
-    private boolean addFichero(Archivo fichero,String destinyPath) {      
+    private boolean addFichero(Archivo fichero,String destinyPath) throws InsufficientSpaceException {
         try {
             Timestamp time = new Timestamp(new java.util.Date().getTime());
             fichero.fechaCreacion = time;
@@ -316,7 +317,7 @@ public class FileSystem {
             String serialized = fichero.toString();
             fichero.tamano = serialized.length();
             if(!addToDisk((Archivo) fichero, serialized)){
-                return false;//not enough space
+                throw new InsufficientSpaceException();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -337,7 +338,7 @@ public class FileSystem {
         return true;
     }
 
-    public boolean addFichero(String name, Fichero fichero) { 
+    public boolean addFichero(String name, Fichero fichero) throws InsufficientSpaceException {
         if (fichero instanceof Archivo) {
             try {
                 Archivo file = (Archivo) fichero;
@@ -347,7 +348,7 @@ public class FileSystem {
                 String serialized = fichero.toString();
                 file.tamano = serialized.length();
                 if(!addToDisk((Archivo) fichero, file.toString())){
-                    return false;//not enough space
+                    throw new InsufficientSpaceException();//not enough space
                 }
                 
             } catch (IOException e) {
