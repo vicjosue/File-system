@@ -64,7 +64,6 @@ public class FileSystem {
          * Iterates over all tree, if there is a coincidence then add the coincidence
          */
         for (Map.Entry<String, Fichero> data : searchMap.getHashMap().entrySet()) {
-            // System.out.println(data.getKey() + " = " + data.getValue());
             if (data.getKey() == fichero) {
                 result.put(path, data.getValue());
             }
@@ -150,7 +149,7 @@ public class FileSystem {
             ArrayList<Integer> sectoresArchivo = file.pointers;
             for(Integer sector: sectoresArchivo){
                 usedSectors.remove(sector);
-                lines.set(sector, ""+System.lineSeparator());
+                lines.set(sector, "");
             }
             file.pointers.clear();
             BufferedWriter writer = new BufferedWriter(new FileWriter("disk.txt"));
@@ -158,7 +157,7 @@ public class FileSystem {
             writer.close();
             writer = new BufferedWriter(new FileWriter("disk.txt", true));
             for(String str: lines) {
-                writer.write(str);
+                writer.write(str+System.lineSeparator());
             }
             writer.close();
         } catch (IOException e) {
@@ -208,27 +207,21 @@ public class FileSystem {
     public boolean copyFromComputer(File fichero, String virtualPath) throws InsufficientSpaceException {
         String delims = "[/]";
         String[] dirs = virtualPath.split(delims);
-        Directorio tempDirectory2 = (Directorio) data.get(dirs[0]);// root
+        Directorio tempDirectory = (Directorio) data.get(dirs[0]);// root
         Directorio temp;
         int i = 1;
         for (; i < dirs.length - 1; i++) {
-            temp = (Directorio) tempDirectory2;
-            tempDirectory2 = (Directorio) temp.getData(dirs[i]);
+            temp = (Directorio) tempDirectory;
+            tempDirectory = (Directorio) temp.getData(dirs[i]);
         }
         if (fichero.isDirectory()) { // directory
-            temp = (Directorio) tempDirectory2;
-            tempDirectory2 = (Directorio) temp.getData(dirs[i]);
-            Directorio nuevo = new Directorio(fichero.getName());
-            tempDirectory2.add(nuevo.getName(), nuevo);
-            copyDirectoryFromComputer(fichero,virtualPath);
+            Directorio nuevo = new Directorio(dirs[dirs.length - 1]);
+            tempDirectory.add(nuevo.getName(), nuevo);//agregar directorio
+            return copyDirectoryFromComputer(fichero,nuevo);
 
         } else { //file
             String fileName = dirs[dirs.length - 1];
             int index = fileName.lastIndexOf('.');
-            //System.out.println(fileName);
-            //System.out.println(index);
-            //System.out.println(fileName.substring(0, index));
-            //System.out.println(fileName.substring(index+1));
 
             Archivo nuevo = new Archivo(fileName.substring(0, index), fileName.substring(index+1));// name
 
@@ -245,27 +238,30 @@ public class FileSystem {
             }
             return addFichero(nuevo,virtualPath);
         }
-        return true;
     }
 
-    private boolean copyDirectoryFromComputer(final File folder,String virtualPath) throws InsufficientSpaceException {
-        /*if false runout of space */
+    private boolean copyDirectoryFromComputer(File folder,Directorio directory) throws InsufficientSpaceException {
+        /*
+        * if false runout of space 
+        */
         for (final File fileEntry : folder.listFiles()) {
             if (fileEntry.isDirectory()) {
-                return copyDirectoryFromComputer(fileEntry,virtualPath);
+                Directorio nuevo = new Directorio(fileEntry.getName());
+                directory.add(nuevo.getName(), nuevo);//agregar directorio
+                if(!copyDirectoryFromComputer(fileEntry,nuevo)){
+                    throw new InsufficientSpaceException();
+                }
             } else {
-                String delims = "[/]";
-                String[] dirs = virtualPath.split(delims);
-                String fileName = dirs[dirs.length - 1];
+                String fileName = fileEntry.getName();
                 int index = fileName.lastIndexOf('.');
                 
-                fileName.substring(index+1);
-                Archivo nuevo = new Archivo(fileName.substring(0, index), fileName.substring(index+1));// name
+                Archivo nuevo = new Archivo(fileName.substring(0, index),
+                 fileName.substring(index+1));// name
 
                 Scanner myReader; // add text
 
                 try {
-                    myReader = new Scanner(folder);
+                    myReader = new Scanner(fileEntry);
                     while (myReader.hasNextLine()) {
                         nuevo.text += myReader.nextLine();
                     }
@@ -273,7 +269,20 @@ public class FileSystem {
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
-                return addFichero(nuevo,virtualPath);
+                try {
+                    Timestamp time = new Timestamp(new java.util.Date().getTime());
+                    nuevo.fechaCreacion = time;
+                    nuevo.fechaModificacion = time;
+                    String serialized = nuevo.toString();
+                    nuevo.tamano = serialized.length();
+                    if(!addToDisk(nuevo, serialized)){
+                        throw new InsufficientSpaceException();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                directory.add(nuevo.getName(), nuevo);
+                changesCallbackEmit();
             }
         }
         return true;
@@ -300,7 +309,6 @@ public class FileSystem {
         } else {
             Directorio directorio = (Directorio) file;
             for (Map.Entry<String, Fichero> data : directorio.getHashMap().entrySet()) {
-                // System.out.println(data.getKey() + " = " + data.getValue());
                 File realDirectorio = new File(computerPath+data.getKey());
                 if (!realDirectorio.exists()) {
                     realDirectorio.mkdirs();
@@ -381,19 +389,19 @@ public class FileSystem {
         }
         int i=0;
         for(String token :splittedFile){
-            if(!usedSectors.contains(i)){
-                usedSectors.add(i);
-                fichero.pointers.add(i);
-                lines.set(i, token+System.lineSeparator());
+            while(usedSectors.contains(i)){
+                i++;//find free space
             }
-            i++;
+            usedSectors.add(i);
+            fichero.pointers.add(i);
+            lines.set(i, token);
         }
         BufferedWriter writer = new BufferedWriter(new FileWriter("disk.txt"));
         writer.write("");//delete old stuff
         writer.close();
         writer = new BufferedWriter(new FileWriter("disk.txt", true));
         for(String str: lines) {
-            writer.write(str);
+            writer.write(str+System.lineSeparator());
         }
         System.out.println("added file "+fichero.getName()+" in: ");
         System.out.println(fichero.pointers);
@@ -431,7 +439,6 @@ public class FileSystem {
 
     public void remove(String name)  {
         /* Remove a file from virtual disk */
-        System.out.println(name);
         Fichero fichero = actualDirectory.getHashMap().get(name);
         
         if( fichero instanceof Archivo ){
@@ -442,7 +449,7 @@ public class FileSystem {
                 ArrayList<Integer> sectoresArchivo = temp.pointers;
                 for(Integer sector: sectoresArchivo){
                     usedSectors.remove(sector);
-                    lines.set(sector, ""+System.lineSeparator());
+                    lines.set(sector, "");
                 }
                 actualDirectory.delete(name);
                 BufferedWriter writer = new BufferedWriter(new FileWriter("disk.txt"));
@@ -450,7 +457,7 @@ public class FileSystem {
                 writer.close();
                 writer = new BufferedWriter(new FileWriter("disk.txt", true));
                 for(String str: lines) {
-                    writer.write(str);
+                    writer.write(str+System.lineSeparator());
                 }
                 writer.close();
             } catch (IOException e) {
@@ -459,7 +466,6 @@ public class FileSystem {
         } else {
             Directorio directorio = (Directorio) fichero;
             for (Map.Entry<String, Fichero> data : directorio.getHashMap().entrySet()) {
-                // System.out.println(data.getKey() + " = " + data.getValue());
                 removeRecursive(data.getValue());
                 directorio.delete(data.getKey());
             }
@@ -477,14 +483,14 @@ public class FileSystem {
                 ArrayList<Integer> sectoresArchivo = temp.pointers;
                 for(Integer sector: sectoresArchivo){
                     usedSectors.remove(sector);
-                    lines.set(sector, ""+System.lineSeparator());
+                    lines.set(sector, "");
                 }
                 BufferedWriter writer = new BufferedWriter(new FileWriter("disk.txt"));
                 writer.write("");//delete old stuff
                 writer.close();
                 writer = new BufferedWriter(new FileWriter("disk.txt", true));
                 for(String str: lines) {
-                    writer.write(str);
+                    writer.write(str+System.lineSeparator());
                 }
                 writer.close();
             } catch (IOException e) {
@@ -493,7 +499,6 @@ public class FileSystem {
         } else {
             Directorio directorio = (Directorio) fichero;
             for (Map.Entry<String, Fichero> data : directorio.getHashMap().entrySet()) {
-                // System.out.println(data.getKey() + " = " + data.getValue());
                 if (data.getValue() instanceof Directorio) {
                     removeRecursive(data.getValue());
                     directorio.delete(data.getKey());
