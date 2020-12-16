@@ -45,6 +45,7 @@ import java.text.SimpleDateFormat;
 import java.util.Optional;
 
 import FileSystem.Exceptions.InsufficientSpaceException;
+import FileSystem.Exceptions.ItemAlreadyExists;
 import FileSystem.Exceptions.PathNotFoundException;
 import FileSystem.UiComponents.ExplorerCell;
 import FileSystem.Utilities.Archivo;
@@ -253,9 +254,11 @@ public class App extends Application {
         Optional<String> result = dialog.showAndWait();
         if (result.isPresent()){
             try {
-                fileSystem.addFichero(result.get(), new Directorio(result.get()));
+                fileSystem.addFichero(result.get(), new Directorio(result.get()), false);
             } catch (InsufficientSpaceException e) {
                 insufficientSpaceErrorAlert(owner);
+            } catch (ItemAlreadyExists e) {
+                itemAlreadyExistsAlert(owner);
             }
         }
 
@@ -302,10 +305,21 @@ public class App extends Application {
         Optional<Triplet<String, String, String>> result = dialog.showAndWait();
 
         if (result.isPresent()) {
+            Archivo file = new Archivo(result.get().getFirst(), result.get().getSecond(), result.get().getThird());
             try {
-                fileSystem.addFichero(result.get().getFirst() + "." + result.get().getSecond(), new Archivo(result.get().getFirst(), result.get().getSecond(), result.get().getThird()));
+                fileSystem.addFichero(file.getName(), file, false);
             } catch (InsufficientSpaceException e) {
                 insufficientSpaceErrorAlert(owner);
+            } catch (ItemAlreadyExists e) {
+                if (replaceItemDialog(owner)) {
+                    try {
+                        fileSystem.addFichero(file.getName(), file, true);
+                    } catch (InsufficientSpaceException m) {
+                        insufficientSpaceErrorAlert(owner);
+                    } catch (ItemAlreadyExists m) {
+
+                    }
+                }
             }
         }
     }
@@ -317,6 +331,25 @@ public class App extends Application {
         alert.setHeaderText("Not enough space");
         alert.setContentText("There's not enough space remaining in the file system to execute the requested action.");
         alert.showAndWait();
+    }
+
+    private void itemAlreadyExistsAlert(Stage owner) {
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.initOwner(owner);
+        alert.setTitle("Error");
+        alert.setHeaderText("Item already exists");
+        alert.setContentText("Another item with the same name already exists.");
+        alert.showAndWait();
+    }
+
+    private Boolean replaceItemDialog(Stage owner) {
+        Alert alert = new Alert(AlertType.CONFIRMATION);
+        alert.initOwner(owner);
+        alert.setTitle("Error");
+        alert.setHeaderText("Item already exists");
+        alert.setContentText("Do you wish to replace the item?");
+        Optional<ButtonType> result = alert.showAndWait();
+        return result.get() == ButtonType.OK;
     }
 
     private void editFile(Stage owner, Archivo file) {
@@ -549,7 +582,13 @@ public class App extends Application {
 
         Optional<String> result = dialog.showAndWait();
         if (result.isPresent()){
-            fileSystem.copyFromFileSystem(fileSystem.getActualPath() + file.getName(), result.get());
+            try {
+                fileSystem.copyFromFileSystem(fileSystem.getActualPath() + file.getName(), result.get());
+            } catch (InsufficientSpaceException e) {
+                insufficientSpaceErrorAlert(owner);
+            } catch (IOException e) {
+                System.out.println(e);
+            }
         }
     }
 
