@@ -29,6 +29,7 @@ public class FileSystem {
     private int tamano;// tamaño de cada sector
     public Function<Void, Void> navigateCallback;
     public Function<Void, Void> changesCallback;
+    public Function<Void, Void> treeCallback;
     ArrayList<Integer> usedSectors = new ArrayList<>();
 
     public static FileSystem getInstance() { // CREATE
@@ -532,11 +533,19 @@ public class FileSystem {
         if (navigateCallback != null) {
             this.navigateCallback.apply(null);
         }
+        treeCallbackEmit();
     }
 
     public void changesCallbackEmit() {
         if (navigateCallback != null) {
             this.changesCallback.apply(null);
+        }
+        treeCallbackEmit();
+    }
+
+    public void treeCallbackEmit() {
+        if (treeCallback != null) {
+            this.treeCallback.apply(null);
         }
     }
 }

@@ -227,12 +227,14 @@ public class App extends Application {
         refreshView();
         fileSystem.changesCallback = fileSystem.navigateCallback = (Void) -> { refreshView(); return Void; };
         
-        Scene scene = new Scene(border, 640, 480);
+        Scene scene = new Scene(border, 800, 480);
 
         JMetro jMetro = new JMetro(scene, Style.DARK);
 
         stage.setScene(scene);
         stage.show();
+
+        new FileTreeWindow();
     }
 
     private void refreshView() {
