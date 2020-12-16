@@ -11,8 +11,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import FileSystem.Exceptions.InsufficientSpaceException;
+import FileSystem.Exceptions.ItemAlreadyExists;
 import FileSystem.Exceptions.PathNotFoundException;
 
 import java.nio.charset.StandardCharsets;
@@ -50,13 +53,25 @@ public class FileSystem {
          * Set initial path and directory for making a call to the method search
          */
         HashMap<String, Fichero> result = new HashMap<>();
+        
         Directorio temp = (Directorio) data.get("root");
-        String path = "root";
-        if (fichero == "root") {
+        String path = "root/";
+        if (fichero.equals("root")) {
             result.put(path, temp);
         }
         search(fichero, path, temp, result);
+
+        //for (Map.Entry<String, Fichero> data : result.entrySet()) {
+          //  System.out.println(data.getKey());
+        //}
         return result;// value still remains in result
+    }
+
+    private String stringToPattern(String string){
+        String nuevo;
+        nuevo = string.replace("." , "\\.");
+        nuevo = nuevo.replace("*" , ".*");
+        return nuevo+"$";//end of string
     }
 
     private void search(String fichero, String path, Directorio searchMap, HashMap<String, Fichero> result) {
@@ -64,12 +79,21 @@ public class FileSystem {
          * Iterates over all tree, if there is a coincidence then add the coincidence
          */
         for (Map.Entry<String, Fichero> data : searchMap.getHashMap().entrySet()) {
-            if (data.getKey() == fichero) {
+            if (data.getKey().equals(fichero)) {
+                result.put(path, data.getValue());
+            }
+
+            if (Pattern.compile(stringToPattern(fichero)).matcher(data.getKey()).find()){
+                System.out.println(fichero);
+                System.out.println(data.getKey());
                 result.put(path, data.getValue());
             }
             if (data.getValue() instanceof Directorio) {
+                if (data.getKey().equals(fichero)) {
+                    result.put(path, data.getValue());
+                }
                 Directorio temp = (Directorio) data.getValue();
-                search(fichero, path + "/" + data.getValue(), temp, result);
+                search(fichero, path +  data.getKey() + "/", temp, result);
 
             }
         }
@@ -180,7 +204,7 @@ public class FileSystem {
         changesCallbackEmit();
     }
 
-    public void copyFromFileSystem(String originalPath, String newPath) {
+    public void copyFromFileSystem(String originalPath, String newPath) throws InsufficientSpaceException, IOException {
         String delims = "[/]";
         String[] dirs = originalPath.split(delims);
 
@@ -192,6 +216,15 @@ public class FileSystem {
             tempDirectory = (Directorio) temp.getData(dirs[i]);
         }
         Archivo file = (Archivo) tempDirectory.getHashMap().get(dirs[i]);
+        Archivo nuevo = new Archivo(file.name,file.extension,file.name);
+        Timestamp time = new Timestamp(new java.util.Date().getTime());
+        nuevo.fechaCreacion = time;
+        nuevo.fechaModificacion = time;
+        String serialized = nuevo.toString();
+        nuevo.tamano = serialized.length();
+        if(!addToDisk((Archivo) nuevo, serialized)){
+            throw new InsufficientSpaceException();
+        }
 
         String[] dirs2 = newPath.split(delims);
 
@@ -201,7 +234,7 @@ public class FileSystem {
             temp = (Directorio) tempDirectory2;
             tempDirectory2 = (Directorio) temp.getData(dirs2[i]);
         }
-        tempDirectory2.add(file.getName(), file);
+        tempDirectory2.add(nuevo.getName(), nuevo);
     }
 
     public boolean copyFromComputer(File fichero, String virtualPath) throws InsufficientSpaceException {
@@ -347,7 +380,10 @@ public class FileSystem {
         return true;
     }
 
-    public boolean addFichero(String name, Fichero fichero) throws InsufficientSpaceException {
+    public boolean addFichero(String name, Fichero fichero, boolean reemplazar) throws InsufficientSpaceException, ItemAlreadyExists {
+        if(!reemplazar && actualDirectory.contains(name)){
+            throw new ItemAlreadyExists();
+        }
         if (fichero instanceof Archivo) {
             try {
                 Archivo file = (Archivo) fichero;
@@ -356,6 +392,9 @@ public class FileSystem {
                 file.fechaModificacion = time;
                 String serialized = fichero.toString();
                 file.tamano = serialized.length();
+                if(reemplazar && actualDirectory.contains(name)){
+                    remove(name);
+                }
                 if(!addToDisk((Archivo) fichero, file.toString())){
                     throw new InsufficientSpaceException();//not enough space
                 }
