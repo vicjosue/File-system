@@ -203,7 +203,7 @@ public class FileSystem {
         changesCallbackEmit();
     }
 
-    public void copyFromFileSystem(String originalPath, String newPath) {
+    public void copyFromFileSystem(String originalPath, String newPath) throws InsufficientSpaceException, IOException {
         String delims = "[/]";
         String[] dirs = originalPath.split(delims);
 
@@ -215,6 +215,15 @@ public class FileSystem {
             tempDirectory = (Directorio) temp.getData(dirs[i]);
         }
         Archivo file = (Archivo) tempDirectory.getHashMap().get(dirs[i]);
+        Archivo nuevo = new Archivo(file.name,file.extension,file.name);
+        Timestamp time = new Timestamp(new java.util.Date().getTime());
+        nuevo.fechaCreacion = time;
+        nuevo.fechaModificacion = time;
+        String serialized = nuevo.toString();
+        nuevo.tamano = serialized.length();
+        if(!addToDisk((Archivo) nuevo, serialized)){
+            throw new InsufficientSpaceException();
+        }
 
         String[] dirs2 = newPath.split(delims);
 
@@ -224,7 +233,7 @@ public class FileSystem {
             temp = (Directorio) tempDirectory2;
             tempDirectory2 = (Directorio) temp.getData(dirs2[i]);
         }
-        tempDirectory2.add(file.getName(), file);
+        tempDirectory2.add(nuevo.getName(), nuevo);
     }
 
     public boolean copyFromComputer(File fichero, String virtualPath) throws InsufficientSpaceException {
@@ -370,7 +379,10 @@ public class FileSystem {
         return true;
     }
 
-    public boolean addFichero(String name, Fichero fichero) throws InsufficientSpaceException {
+    public boolean addFichero(String name, Fichero fichero, boolean reemplazar) throws InsufficientSpaceException, ItemAlreadyExists {
+        if(!reemplazar && actualDirectory.contains(name)){
+            throw new ItemAlreadyExists();
+        }
         if (fichero instanceof Archivo) {
             try {
                 Archivo file = (Archivo) fichero;
@@ -379,6 +391,9 @@ public class FileSystem {
                 file.fechaModificacion = time;
                 String serialized = fichero.toString();
                 file.tamano = serialized.length();
+                if(reemplazar && actualDirectory.contains(name)){
+                    remove(name);
+                }
                 if(!addToDisk((Archivo) fichero, file.toString())){
                     throw new InsufficientSpaceException();//not enough space
                 }
