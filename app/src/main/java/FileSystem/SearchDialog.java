@@ -1,5 +1,6 @@
 package FileSystem;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -18,13 +19,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Pair;
 import jfxtras.styles.jmetro.FlatDialog;
 
 public class SearchDialog extends FlatDialog {
     FileSystem fileSystem = FileSystem.getInstance();
-    ObservableList<Entry<String, Fichero>> items;
+    ObservableList<Pair<String, Fichero>> items;
     TextField searchField;
-    HashMap<String, Fichero> result;
 
     SearchDialog(Stage primaryStage) {
         super();
@@ -40,7 +41,7 @@ public class SearchDialog extends FlatDialog {
             }
         });
 
-        ListView<Entry<String, Fichero>> listView = new ListView<Entry<String, Fichero>>();
+        ListView<Pair<String, Fichero>> listView = new ListView<Pair<String, Fichero>>();
         items = FXCollections.observableArrayList();
         listView.setItems(items);
 
@@ -53,7 +54,7 @@ public class SearchDialog extends FlatDialog {
         
                 if (click.getClickCount() == 2) {
                    //Use ListView's getSelected Item
-                   Entry<String, Fichero> selected = listView.getSelectionModel().getSelectedItem();
+                   Pair<String, Fichero> selected = listView.getSelectionModel().getSelectedItem();
                    if (selected != null) {
                        openFichero(selected);
                    }
@@ -71,12 +72,12 @@ public class SearchDialog extends FlatDialog {
     }
 
     private void search() {
-        result = fileSystem.find(searchField.getText());
+        ArrayList<Pair<String, Fichero>> result = fileSystem.find(searchField.getText());
         items.clear();
-        items.addAll(result.entrySet());
+        items.addAll(result);
     }
 
-    private void openFichero(Entry<String, Fichero> item) {
+    private void openFichero(Pair<String, Fichero> item) {
         try {
             fileSystem.goToDir(item.getKey());
         } catch (PathNotFoundException e) {

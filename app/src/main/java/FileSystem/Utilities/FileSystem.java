@@ -2,7 +2,6 @@ package FileSystem.Utilities;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
@@ -10,7 +9,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -19,6 +17,9 @@ import com.google.common.io.CharStreams;
 import FileSystem.Exceptions.InsufficientSpaceException;
 import FileSystem.Exceptions.ItemAlreadyExistsException;
 import FileSystem.Exceptions.PathNotFoundException;
+import javafx.util.Pair;
+
+import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.mozilla.universalchardet.ReaderFactory;
 
 import java.nio.charset.StandardCharsets;
@@ -52,16 +53,16 @@ public class FileSystem {
         actualPath = "root/";
     }
 
-    public HashMap<String, Fichero> find(String fichero) {
+    public ArrayList<Pair<String, Fichero>> find(String fichero) {
         /*
          * Set initial path and directory for making a call to the method search
          */
-        HashMap<String, Fichero> result = new HashMap<>();
+        ArrayList<Pair<String, Fichero>> result = new ArrayList<>();
 
         Directorio temp = (Directorio) data.get("root");
         String path = "root/";
         if (fichero.equals("root")) {
-            result.put(path, temp);
+            result.add(new Pair<>(path, temp));
         }
         search(fichero, path, temp, result);
         return result;// value still remains in result
@@ -74,23 +75,19 @@ public class FileSystem {
         return nuevo + "$";// end of string
     }
 
-    private void search(String fichero, String path, Directorio searchMap, HashMap<String, Fichero> result) {
+    private void search(String fichero, String path, Directorio searchMap, ArrayList<Pair<String, Fichero>> result) {
         /*
          * Iterates over all tree, if there is a coincidence then add the coincidence
          */
         for (Map.Entry<String, Fichero> data : searchMap.getHashMap().entrySet()) {
-            if (data.getKey().equals(fichero)) {
-                result.put(path, data.getValue());
+            double jWS = new JaroWinklerSimilarity().apply(fichero, data.getValue().getName());
+            if (jWS > 0.75 || data.getValue().getName().equals(fichero) || Pattern.compile(stringToPattern(fichero)).matcher(data.getKey()).find()) {
+                result.add(new Pair<String, Fichero>(path, data.getValue()));
             }
-
-            if (Pattern.compile(stringToPattern(fichero)).matcher(data.getKey()).find()) {
-                System.out.println(fichero);
-                System.out.println(data.getKey());
-                result.put(path, data.getValue());
-            }
+            
             if (data.getValue() instanceof Directorio) {
                 if (data.getKey().equals(fichero)) {
-                    result.put(path, data.getValue());
+                    result.add(new Pair<String, Fichero>(path, data.getValue()));
                 }
                 Directorio temp = (Directorio) data.getValue();
                 search(fichero, path + data.getKey() + "/", temp, result);

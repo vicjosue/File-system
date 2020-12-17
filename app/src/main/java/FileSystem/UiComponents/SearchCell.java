@@ -1,18 +1,17 @@
 package FileSystem.UiComponents;
 
-import java.util.Map.Entry;
-
 import FileSystem.Utilities.Archivo;
 import FileSystem.Utilities.Directorio;
 import FileSystem.Utilities.Fichero;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.layout.HBox;
+import javafx.util.Pair;
 import jfxtras.styles.jmetro.MDL2IconFont;
 
-public class SearchCell extends ListCell<Entry<String, Fichero>> {
+public class SearchCell extends ListCell<Pair<String, Fichero>> {
     @Override
-    public void updateItem(Entry<String, Fichero> item, boolean empty) {
+    public void updateItem(Pair<String, Fichero> item, boolean empty) {
         super.updateItem(item, empty);
 
         if (item == null || empty) {
