@@ -2,6 +2,8 @@ package FileSystem;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import jfxtras.styles.jmetro.JMetro;
@@ -15,12 +17,14 @@ public class FileTreeWindow  {
     FileSystem fileSystem = FileSystem.getInstance();
 
     FileTreeWindow() {
-        VBox box = new VBox();
+        ScrollPane scrollPane = new ScrollPane();
         tree = new Label();
-        box.getChildren().add(tree);
-        box.getStyleClass().add(JMetroStyleClass.BACKGROUND);
+        scrollPane.setContent(tree);
+        scrollPane.getStyleClass().add(JMetroStyleClass.BACKGROUND);
+        scrollPane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
+        scrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
 
-        Scene scene = new Scene(box, 200, 480);
+        Scene scene = new Scene(scrollPane, 200, 480);
 
         
         Stage stage = new Stage();
