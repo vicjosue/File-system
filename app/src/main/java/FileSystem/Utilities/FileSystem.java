@@ -592,7 +592,7 @@ public class FileSystem {
         int level = 0;
         for (Map.Entry<String, Fichero> dat : data.entrySet()) {
             if (dat.getValue() instanceof Directorio) {
-                tree += getTreeRecursive(dat.getValue(), tree, " └──");
+                tree += getTreeRecursive(dat.getValue(), tree, " \u2514\u2500 ");
             } else {
                 tree += dat.getKey() + "\n";
             }

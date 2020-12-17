@@ -29,6 +29,8 @@ public class FileTreeWindow  {
         JMetro jMetro = new JMetro(scene, Style.DARK);
 
         fileSystem.treeCallback = (Void) -> { refreshTree(); return Void; };
+
+        refreshTree();
         
         stage.setScene(scene);
         stage.show();
@@ -36,7 +38,7 @@ public class FileTreeWindow  {
     }
 
     private void refreshTree() {
-
+        tree.setText(fileSystem.getTree());
     }
     
 }
