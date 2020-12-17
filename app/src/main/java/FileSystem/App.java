@@ -544,6 +544,9 @@ public class App extends Application {
                     fileSystem.copyFromComputer(selectedFile, result.get());
                 } catch (InsufficientSpaceException e) {
                     insufficientSpaceErrorAlert(owner);
+                } catch (IOException e) {
+                    System.out.println(e);
+                    e.printStackTrace();
                 }
             }
         }
@@ -567,6 +570,8 @@ public class App extends Application {
                     fileSystem.copyFromComputer(selectedFile, result.get());
                 } catch (InsufficientSpaceException e) {
                     insufficientSpaceErrorAlert(owner);
+                } catch (IOException e) {
+                    System.out.println(e);
                 }
             }
         }
@@ -588,6 +593,7 @@ public class App extends Application {
                 insufficientSpaceErrorAlert(owner);
             } catch (IOException e) {
                 System.out.println(e);
+                e.printStackTrace();
             }
         }
     }

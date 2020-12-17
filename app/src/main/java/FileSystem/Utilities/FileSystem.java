@@ -5,21 +5,24 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.Map.Entry;
 import java.util.function.Function;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.google.common.io.CharStreams;
 
 import FileSystem.Exceptions.InsufficientSpaceException;
 import FileSystem.Exceptions.ItemAlreadyExistsException;
 import FileSystem.Exceptions.PathNotFoundException;
+import org.mozilla.universalchardet.ReaderFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnmappableCharacterException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
@@ -233,7 +236,7 @@ public class FileSystem {
         tempDirectory2.add(nuevo.getName(), nuevo);
     }
 
-    public boolean copyFromComputer(File fichero, String virtualPath) throws InsufficientSpaceException {
+    public boolean copyFromComputer(File fichero, String virtualPath) throws InsufficientSpaceException, IOException {
         String delims = "[/]";
         String[] dirs = virtualPath.split(delims);
         Directorio tempDirectory = (Directorio) data.get(dirs[0]);// root
@@ -253,23 +256,22 @@ public class FileSystem {
             int index = fileName.lastIndexOf('.');
 
             Archivo nuevo = new Archivo(fileName.substring(0, index), fileName.substring(index + 1));// name
+            nuevo.text = readFile(fichero);
 
-            Scanner myReader; // add text
-
-            try {
-                myReader = new Scanner(fichero);
-                while (myReader.hasNextLine()) {
-                    nuevo.text += myReader.nextLine();
-                }
-                myReader.close();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
             return addFichero(nuevo, virtualPath);
         }
     }
 
-    private boolean copyDirectoryFromComputer(File folder, Directorio directory) throws InsufficientSpaceException {
+    private String readFile(File file) throws IOException {
+        Reader reader = ReaderFactory.createBufferedReader(file);
+        try {
+            return CharStreams.toString(reader);
+        } catch (UnmappableCharacterException e) {
+            return e.toString();
+        }
+    }
+
+    private boolean copyDirectoryFromComputer(File folder, Directorio directory) throws InsufficientSpaceException, IOException {
         /*
          * if false runout of space
          */
@@ -286,17 +288,8 @@ public class FileSystem {
 
                 Archivo nuevo = new Archivo(fileName.substring(0, index), fileName.substring(index + 1));// name
 
-                Scanner myReader; // add text
+                nuevo.text = readFile(fileEntry);
 
-                try {
-                    myReader = new Scanner(fileEntry);
-                    while (myReader.hasNextLine()) {
-                        nuevo.text += myReader.nextLine();
-                    }
-                    myReader.close();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
                 try {
                     Timestamp time = new Timestamp(new java.util.Date().getTime());
                     nuevo.fechaCreacion = time;
