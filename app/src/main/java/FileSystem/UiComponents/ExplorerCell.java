@@ -15,7 +15,7 @@ public class ExplorerCell extends ListCell<Fichero> {
         if (item instanceof Archivo) {
             iconFont1 = new MDL2IconFont("\uE8A5");
         } else if (item instanceof Directorio) {
-            iconFont1 = new MDL2IconFont("\uE8B7");
+            iconFont1 = new MDL2IconFont("\uE8D5");
         } else {
             iconFont1 = new MDL2IconFont("\uF22E");
         }

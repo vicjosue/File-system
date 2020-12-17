@@ -24,7 +24,7 @@ public class SearchCell extends ListCell<Entry<String, Fichero>> {
         if (item.getValue() instanceof Archivo) {
             iconFont1 = new MDL2IconFont("\uE8A5");
         } else if (item.getValue() instanceof Directorio) {
-            iconFont1 = new MDL2IconFont("\uE8B7");
+            iconFont1 = new MDL2IconFont("\uE8D5");
         } else {
             iconFont1 = new MDL2IconFont("\uF22E");
         }
