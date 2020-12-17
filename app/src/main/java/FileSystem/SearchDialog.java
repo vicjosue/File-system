@@ -1,7 +1,10 @@
 package FileSystem;
 
 import java.util.HashMap;
+import java.util.Map.Entry;
 
+import FileSystem.Exceptions.PathNotFoundException;
+import FileSystem.UiComponents.SearchCell;
 import FileSystem.Utilities.Fichero;
 import FileSystem.Utilities.FileSystem;
 import javafx.application.Platform;
@@ -10,15 +13,19 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Callback;
+import javafx.util.Pair;
 import jfxtras.styles.jmetro.FlatDialog;
 
 public class SearchDialog extends FlatDialog {
     FileSystem fileSystem = FileSystem.getInstance();
-    ObservableList<String> items;
+    ObservableList<Entry<String, Fichero>> items;
     TextField searchField;
     HashMap<String, Fichero> result;
 
@@ -36,9 +43,27 @@ public class SearchDialog extends FlatDialog {
             }
         });
 
-        ListView listView = new ListView<String>();
+        ListView<Entry<String, Fichero>> listView = new ListView<Entry<String, Fichero>>();
         items = FXCollections.observableArrayList();
         listView.setItems(items);
+
+        listView.setCellFactory(searchListView -> new SearchCell());
+
+        listView.setOnMouseClicked(new EventHandler<MouseEvent>() {
+
+            @Override
+            public void handle(MouseEvent click) {
+        
+                if (click.getClickCount() == 2) {
+                   //Use ListView's getSelected Item
+                   Entry<String, Fichero> selected = listView.getSelectionModel().getSelectedItem();
+                   if (selected != null) {
+                       openFichero(selected);
+                   }
+                }
+                listView.getSelectionModel().clearSelection();
+            }
+        });
 
         content.getChildren().addAll(searchField, listView);
 
@@ -52,6 +77,17 @@ public class SearchDialog extends FlatDialog {
         System.out.println("Search");
         result = fileSystem.find(searchField.getText());
         items.clear();
-        items.addAll(result.keySet());
+        System.out.print(result.size());
+        items.addAll(result.entrySet());
+        System.out.print(items.size());
+        
+    }
+
+    private void openFichero(Entry<String, Fichero> item) {
+        try {
+            fileSystem.goToDir(item.getKey());
+        } catch (PathNotFoundException e) {
+
+        }
     }
 }

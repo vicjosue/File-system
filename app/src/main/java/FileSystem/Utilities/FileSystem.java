@@ -16,7 +16,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import FileSystem.Exceptions.InsufficientSpaceException;
-import FileSystem.Exceptions.ItemAlreadyExists;
+import FileSystem.Exceptions.ItemAlreadyExistsException;
 import FileSystem.Exceptions.PathNotFoundException;
 
 import java.nio.charset.StandardCharsets;
@@ -375,10 +375,9 @@ public class FileSystem {
         return true;
     }
 
-    public boolean addFichero(String name, Fichero fichero, boolean reemplazar)
-            throws InsufficientSpaceException, ItemAlreadyExists {
-        if (!reemplazar && actualDirectory.contains(name)) {
-            throw new ItemAlreadyExists();
+    public boolean addFichero(String name, Fichero fichero, boolean reemplazar) throws InsufficientSpaceException, ItemAlreadyExistsException {
+        if(!reemplazar && actualDirectory.contains(name)){
+            throw new ItemAlreadyExistsException();
         }
         if (fichero instanceof Archivo) {
             try {

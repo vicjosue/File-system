@@ -45,7 +45,7 @@ import java.text.SimpleDateFormat;
 import java.util.Optional;
 
 import FileSystem.Exceptions.InsufficientSpaceException;
-import FileSystem.Exceptions.ItemAlreadyExists;
+import FileSystem.Exceptions.ItemAlreadyExistsException;
 import FileSystem.Exceptions.PathNotFoundException;
 import FileSystem.UiComponents.ExplorerCell;
 import FileSystem.Utilities.Archivo;
@@ -257,7 +257,7 @@ public class App extends Application {
                 fileSystem.addFichero(result.get(), new Directorio(result.get()), false);
             } catch (InsufficientSpaceException e) {
                 insufficientSpaceErrorAlert(owner);
-            } catch (ItemAlreadyExists e) {
+            } catch (ItemAlreadyExistsException e) {
                 itemAlreadyExistsAlert(owner);
             }
         }
@@ -310,13 +310,13 @@ public class App extends Application {
                 fileSystem.addFichero(file.getName(), file, false);
             } catch (InsufficientSpaceException e) {
                 insufficientSpaceErrorAlert(owner);
-            } catch (ItemAlreadyExists e) {
+            } catch (ItemAlreadyExistsException e) {
                 if (replaceItemDialog(owner)) {
                     try {
                         fileSystem.addFichero(file.getName(), file, true);
                     } catch (InsufficientSpaceException m) {
                         insufficientSpaceErrorAlert(owner);
-                    } catch (ItemAlreadyExists m) {
+                    } catch (ItemAlreadyExistsException m) {
 
                     }
                 }
