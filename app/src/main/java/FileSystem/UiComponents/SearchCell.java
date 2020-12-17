@@ -14,6 +14,12 @@ public class SearchCell extends ListCell<Entry<String, Fichero>> {
     @Override
     public void updateItem(Entry<String, Fichero> item, boolean empty) {
         super.updateItem(item, empty);
+
+        if (item == null || empty) {
+            setGraphic(null);
+            return;
+        }
+
         MDL2IconFont iconFont1;
         if (item.getValue() instanceof Archivo) {
             iconFont1 = new MDL2IconFont("\uE8A5");
@@ -28,14 +34,7 @@ public class SearchCell extends ListCell<Entry<String, Fichero>> {
         row.getChildren().add(iconFont1);
         row.getChildren().add(label);
         
-        if (item != null && !empty) {
-            System.out.println(item.getKey());
-            label.setText(item.getKey() + "/" + item.getValue().getName());
-            setGraphic(row);
-        } else {
-            System.out.println("empty");
-            setGraphic(null);
-            label.setText("");
-        }
+        label.setText(item.getKey() + item.getValue().getName());
+        setGraphic(row);
     }
 }

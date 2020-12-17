@@ -13,14 +13,11 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.util.Callback;
-import javafx.util.Pair;
 import jfxtras.styles.jmetro.FlatDialog;
 
 public class SearchDialog extends FlatDialog {
@@ -74,13 +71,9 @@ public class SearchDialog extends FlatDialog {
     }
 
     private void search() {
-        System.out.println("Search");
         result = fileSystem.find(searchField.getText());
         items.clear();
-        System.out.print(result.size());
         items.addAll(result.entrySet());
-        System.out.print(items.size());
-        
     }
 
     private void openFichero(Entry<String, Fichero> item) {
