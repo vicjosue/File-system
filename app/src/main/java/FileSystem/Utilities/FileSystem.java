@@ -220,6 +220,7 @@ public class FileSystem {
         nuevo.fechaCreacion = time;
         nuevo.fechaModificacion = time;
         String serialized = nuevo.toString();
+        serialized = removeLineBreaks(serialized);
         nuevo.tamano = serialized.length();
         if (!addToDisk((Archivo) nuevo, serialized)) {
             throw new InsufficientSpaceException();
@@ -295,6 +296,7 @@ public class FileSystem {
                     nuevo.fechaCreacion = time;
                     nuevo.fechaModificacion = time;
                     String serialized = nuevo.toString();
+                    serialized = removeLineBreaks(serialized);
                     nuevo.tamano = serialized.length();
                     if (!addToDisk(nuevo, serialized)) {
                         throw new InsufficientSpaceException();
@@ -345,6 +347,7 @@ public class FileSystem {
             fichero.fechaCreacion = time;
             fichero.fechaModificacion = time;
             String serialized = fichero.toString();
+            serialized = removeLineBreaks(serialized);
             fichero.tamano = serialized.length();
             if (!addToDisk((Archivo) fichero, serialized)) {
                 throw new InsufficientSpaceException();
@@ -379,11 +382,12 @@ public class FileSystem {
                 file.fechaCreacion = time;
                 file.fechaModificacion = time;
                 String serialized = fichero.toString();
+                serialized = removeLineBreaks(serialized);
                 file.tamano = serialized.length();
                 if (reemplazar && actualDirectory.contains(name)) {
                     remove(name);
                 }
-                if (!addToDisk((Archivo) fichero, file.toString())) {
+                if (!addToDisk((Archivo) fichero, serialized)) {
                     throw new InsufficientSpaceException();// not enough space
                 }
 
@@ -603,5 +607,11 @@ public class FileSystem {
             }
         }
         return tree;
+    }
+
+    private String removeLineBreaks(String str) {
+        String res = str;
+        res = res.replaceAll("(\\r|\\n|\\r\\n)+", "\\\\n");
+        return res;
     }
 }
