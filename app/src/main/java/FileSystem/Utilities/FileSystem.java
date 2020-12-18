@@ -331,12 +331,17 @@ public class FileSystem {
             }
         } else {
             Directorio directorio = (Directorio) file;
+            File realDirectorio = new File(computerPath + directorio.getName() + "/");
+            if (!realDirectorio.exists()) {
+                realDirectorio.mkdirs();
+            }
             for (Map.Entry<String, Fichero> data : directorio.getHashMap().entrySet()) {
-                File realDirectorio = new File(computerPath + data.getKey());
-                if (!realDirectorio.exists()) {
-                    realDirectorio.mkdirs();
+                if(data.getValue() instanceof Directorio){
+                    copyToComputer(data.getValue(), computerPath + directorio.getName() + "/");
                 }
-                copyToComputer(data.getValue(), computerPath + data.getKey() + "/");
+                else{
+                    copyToComputer(data.getValue(), computerPath+ directorio.getName() + "/");
+                }
             }
         }
     }
