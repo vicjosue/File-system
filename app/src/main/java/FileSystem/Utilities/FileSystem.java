@@ -597,7 +597,7 @@ public class FileSystem {
         if (fichero instanceof Directorio) {
             Directorio dir = (Directorio) fichero;
             for (Map.Entry<String, Fichero> data : dir.getHashMap().entrySet()) {
-                tree = getTreeRecursive(data.getValue(),tree,"  |    "+level);
+                tree = getTreeRecursive(data.getValue(),tree," \u2502    "+level);
             }
         }
         return tree;
