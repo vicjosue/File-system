@@ -185,15 +185,25 @@ public class FileSystem {
             temp = (Directorio) tempDirectory;
             tempDirectory = (Directorio) temp.getData(dirs[i]);
         }
-        Archivo file = (Archivo) tempDirectory.getHashMap().get(dirs[i]);
-        Archivo nuevo = new Archivo(file.name, file.extension, file.name);
-        Timestamp time = new Timestamp(new java.util.Date().getTime());
-        nuevo.fechaCreacion = time;
-        nuevo.fechaModificacion = time;
-        String serialized = nuevo.toString();
-        nuevo.tamano = serialized.length();
-        if (!addToDisk((Archivo) nuevo, serialized)) {
-            throw new InsufficientSpaceException();
+        Fichero file = tempDirectory.getHashMap().get(dirs[i]);
+        if(file instanceof Archivo){
+            Archivo fileCopy = (Archivo) file;
+            Archivo nuevo = new Archivo(fileCopy.name, fileCopy.extension, file.name);
+            Timestamp time = new Timestamp(new java.util.Date().getTime());
+            nuevo.fechaCreacion = time;
+            nuevo.fechaModificacion = time;
+            String serialized = nuevo.toString();
+            nuevo.tamano = serialized.length();
+            if (!addToDisk((Archivo) nuevo, serialized)) {
+                throw new InsufficientSpaceException();
+            }
+            file = nuevo;
+        } else {
+            Directorio dir = new Directorio(file.getName());//new one
+            Directorio dirToCopy = (Directorio) file;// old one
+
+            recursiveCopy( (Fichero) dirToCopy,dir, false); //add files from old one to new one
+            file = dir;
         }
 
         String[] dirs2 = newPath.split(delims);
@@ -204,8 +214,28 @@ public class FileSystem {
             temp = (Directorio) tempDirectory2;
             tempDirectory2 = (Directorio) temp.getData(dirs2[i]);
         }
-        tempDirectory2.add(nuevo.getName(), nuevo);
+        tempDirectory2.add(file.getName(), file);
         changesCallbackEmit();
+    }
+
+    public void recursiveCopy(Fichero dirToCopy,Directorio dir, boolean newDir){
+        if(dirToCopy instanceof Archivo){
+            dir.add(dirToCopy.getName(), dirToCopy);
+        } else {
+            Directorio folder = (Directorio) dirToCopy;//casting old one
+            if(newDir==true){
+                Directorio nuevo = new Directorio(folder.getName());
+                dir.add(nuevo.getName(), nuevo);
+                for(Map.Entry<String, Fichero> file: folder.getHashMap().entrySet()){
+                    recursiveCopy(file.getValue(), nuevo,true);
+                }
+            } else {
+                for(Map.Entry<String, Fichero> file: folder.getHashMap().entrySet()){
+                    recursiveCopy(file.getValue(), dir,true);
+                }
+            }
+            
+        }
     }
 
     public boolean copyFromComputer(File fichero, String virtualPath) throws InsufficientSpaceException, IOException {
