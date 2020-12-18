@@ -232,6 +232,7 @@ public class FileSystem {
             tempDirectory2 = (Directorio) temp.getData(dirs2[i]);
         }
         tempDirectory2.add(nuevo.getName(), nuevo);
+        changesCallbackEmit();
     }
 
     public boolean copyFromComputer(File fichero, String virtualPath) throws InsufficientSpaceException, IOException {
