@@ -381,6 +381,7 @@ public class FileSystem {
                 String serialized = fichero.toString();
                 serialized = removeLineBreaks(serialized);
                 file.tamano = serialized.length();
+                serialized = fichero.toString();
                 if (reemplazar && actualDirectory.contains(name)) {
                     remove(name);
                 }
