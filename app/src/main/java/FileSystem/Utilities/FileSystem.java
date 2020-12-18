@@ -583,7 +583,6 @@ public class FileSystem {
 
     public String getTree() {
         String tree = "";
-        int level = 0;
         for (Map.Entry<String, Fichero> dat : data.entrySet()) {
             if (dat.getValue() instanceof Directorio) {
                 tree += getTreeRecursive(dat.getValue(), tree, " \u2514\u2500 ");
@@ -600,7 +599,7 @@ public class FileSystem {
         if (fichero instanceof Directorio) {
             Directorio dir = (Directorio) fichero;
             for (Map.Entry<String, Fichero> data : dir.getHashMap().entrySet()) {
-                tree = getTreeRecursive(data.getValue(),tree,"|  "+level);
+                tree = getTreeRecursive(data.getValue(),tree,"  |    "+level);
             }
         }
         return tree;
