@@ -170,7 +170,14 @@ public class FileSystem {
             temp = (Directorio) tempDirectory2;
             tempDirectory2 = (Directorio) temp.getData(dirs2[i]);
         }
-        tempDirectory2.add(file.getName(), file);
+        file.changeName(dirs2[i]);
+        /*
+        if(file instanceof Archivo){
+            int iend = dirs2[i].indexOf(".");
+            file.changeName(filename.substring(0 , iend));
+        }*/
+        
+        tempDirectory2.add(file.name, file);
         changesCallbackEmit();
     }
 
@@ -194,6 +201,7 @@ public class FileSystem {
             nuevo.fechaModificacion = time;
             String serialized = nuevo.toString();
             nuevo.tamano = serialized.length();
+            serialized = nuevo.toString(); //with attribute tamano
             if (!addToDisk((Archivo) nuevo, serialized)) {
                 throw new InsufficientSpaceException();
             }
@@ -298,6 +306,7 @@ public class FileSystem {
                     nuevo.fechaModificacion = time;
                     String serialized = nuevo.toString();
                     nuevo.tamano = serialized.length();
+                    serialized = nuevo.toString(); //with attribute tamano
                     if (!addToDisk(nuevo, serialized)) {
                         throw new InsufficientSpaceException();
                     }
@@ -353,6 +362,7 @@ public class FileSystem {
             fichero.fechaModificacion = time;
             String serialized = fichero.toString();
             fichero.tamano = serialized.length();
+            serialized = fichero.toString(); //with attribute tamano
             if (!addToDisk((Archivo) fichero, serialized)) {
                 throw new InsufficientSpaceException();
             }
@@ -387,6 +397,7 @@ public class FileSystem {
                 file.fechaModificacion = time;
                 String serialized = fichero.toString();
                 file.tamano = serialized.length();
+                serialized = file.toString(); //with attribute tamano
                 if (reemplazar && actualDirectory.contains(name)) {
                     remove(name);
                 }
@@ -453,6 +464,7 @@ public class FileSystem {
                 file.fechaModificacion = time;
                 String serialized = fichero.toString();
                 file.tamano = serialized.length();
+                serialized = file.toString(); //with attribute tamano
                 remove(name);// delete from disk
                 file.pointers.clear();// delete pointers
                 if (!addToDisk((Archivo) fichero, serialized)) { // new pointers

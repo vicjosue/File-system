@@ -11,7 +11,9 @@ public abstract class Fichero implements java.io.Serializable{
     public Fichero(String name) {
         this.name = name;
     }
-    
+    public void changeName(String name){
+        this.name = name;
+    }
 
     public String getName() {
         return this.name;

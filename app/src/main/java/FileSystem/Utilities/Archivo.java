@@ -28,6 +28,13 @@ public class Archivo extends Fichero {
     }
 
     @Override
+    public void changeName(String name) {
+        int iend = name.indexOf(".");
+        this.name = name.substring(0 , iend);
+        this.extension = name.substring(iend+1);
+    }
+
+    @Override
     public String getName() {
         return super.name + "." + extension;
     }
