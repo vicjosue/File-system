@@ -6,4 +6,7 @@ sistema a windows y la seguridad que esto conlleva como es no poder tener archiv
 iguales en un mismo directorio o asegurar no poder insertar o crear archivos cuando
 no haya suficiente espacio.
 
+# Instalation
+
+To run this app locally, clone this repository and run:
 `./gradlew run`
